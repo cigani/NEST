@@ -30,7 +30,7 @@ J_E = 0.1
 J_I = -g*J_E
 nu_ex = eta*v_th/(J_E*C_E*tau_m)
 p_rate = 1000.0*nu_ex*C_E
-nest.SetKernelStatus({'print time': True})
+nest.SetKernelStatus({'print_time': True})
 
 #Create Network
 nest.SetDefaults('iaf_psc_delta', {'C_m': 1.0, 'tau_m': tau_m, 't_ref': 2.0,
