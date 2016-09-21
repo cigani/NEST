@@ -30,6 +30,7 @@ J_E = 0.1
 J_I = -g*J_E
 nu_ex = eta*v_th/(J_E*C_E*tau_m)
 p_rate = 1000.0*nu_ex*C_E
+nest.SetKernelStatus({'print time': True})
 
 #Create Network
 nest.SetDefaults('iaf_psc_delta', {'C_m': 1.0, 'tau_m': tau_m, 't_ref': 2.0,
@@ -44,7 +45,6 @@ spikes_E = spikes[:1]
 spikes_I = spikes[1:]
 
 #Connect Network
-
 nest.CopyModel('static_synapse_hom_w', 'excitatory',
                {'weight':J_E, 'delay': delay})
 nest.Connect(nodes_E, nodes,
@@ -59,7 +59,8 @@ nest.Connect(noise,nodes, syn_spec='excitatory')
 N_rec =50
 nest.Connect(nodes_E[:N_rec], spikes_E)
 nest.Connect(nodes_I[:N_rec], spikes_I)
-# Sim
+
+#Sim
 simtime=300
 nest.Simulate(simtime)
 events = nest.GetStatus(spikes,'n_events')
@@ -67,6 +68,7 @@ rate_ex = events[0]/simtime*1000.0/N_rec
 print 'Excitatory Rate: %.2f 1/s' % rate_ex
 rate_in = events[1]/simtime*1000.0/N_rec
 print 'Inhibitory Rate: %.2f 1/s' %rate_in
+
 #Plot
 nest.raster_plot.from_device(spikes_E, hist=True)
 pylab.show()
