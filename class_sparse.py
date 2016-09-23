@@ -40,22 +40,22 @@ class Brunnel2000(object):
         if self.built: return
         #self.calibrate()
         nn=self.N_E + self.N_I
-        ce=self.N_E/10
-        ci=self.N_I/10
-        ji=-self.g*self.J_E
-        nuex=self.eta*self.V_th/(self.J_E*ce*self.tau_m)
-        prate=1000.0*nuex*ce
+        self.ce=self.N_E/10
+        self.ci=self.N_I/10
+        self.ji=-self.g*self.J_E
+        nuex=self.eta*self.V_th/(self.J_E*self.ce*self.tau_m)
+        prate=1000.0*nuex*self.ce
         nest.SetDefaults('iaf_psc_delta',{'C_m': 1.0, 'tau_m': self.tau_m,
                                           't_ref': 2.0, 'E_L': 0.0, 'V_th':
                                           self.V_th,'V_reset': 10.0})
-        nodes=nest.Create('iaf_psc_delta',nn)
-        nodesE=nodes[:self.N_E]
-        nodesI=nodes[self.N_E:]
-        noise=nest.Create('poisson_generator',1,{'rate': prate})
-        spikes=nest.Create('spike_detector',2,[{'label': 'ex'},
+        self.nodes=nest.Create('iaf_psc_delta',nn)
+        self.nodesE=self.nodes[:self.N_E]
+        self.nodesI=self.nodes[self.N_E:]
+        self.noise=nest.Create('poisson_generator',1,{'rate': prate})
+        self.spikes=nest.Create('spike_detector',2,[{'label': 'ex'},
                                                {'label': 'in'}])
-        spikesE=spikes[:1]
-        spikesI=spikes[1:]
+        self.spikesE=self.spikes[:1]
+        self.spikesI=self.spikes[1:]
         self.built=True
 
     def connect(self):
@@ -63,16 +63,19 @@ class Brunnel2000(object):
         if self.connected: return
         if not self.built:
             self.build()
-        nest.CopyModel('static_synpase_hom_w', 'excitatory',
-                       {'weight': J_E, 'delay': delay})
-        nest.Connect(nodesE, nodes, {'rule': 'fixed_indegree', 'indegree': ce},
-                    'excitatory')
-        nest.CopyModel('static_synpase_hom_w', 'inhibitory',
-                       {'weight': J_E, 'delay': delay})
-        nest.Connect(nodesE, nodes, {'rule': 'fixed_indegree', 'indegree': ce},
-                    'inhibitory')
-        nest.Connect(nodesE[:N_Rec], spikesE)
-        nest.Connect(nodesI[:N_Rec], spikesI)
+        nest.CopyModel('static_synapse_hom_w', 'excitatory',
+                       {'weight': self.J_E, 'delay': self.delay})
+        nest.Connect(self.nodesE, self.nodes, {'rule': 'fixed_indegree',
+                                               'indegree':
+                                     self.ce},'excitatory')
+        nest.CopyModel('static_synapse_hom_w', 'inhibitory',
+                       {'weight': self.ji, 'delay': self.delay})
+        nest.Connect(self.nodesE, self.nodes, {'rule': 'fixed_indegree',
+                                               'indegree':
+                                     self.ci},'inhibitory')
+        nest.Connect(self.nodesE[:self.N_Rec], self.spikesE)
+        nest.Connect(self.nodesI[:self.N_Rec], self.spikesI)
+        nest.Connect(self.noise, self.nodes, syn_spec='excitatory')
         self.connected=True
 
     def run(self,simtime=300):
@@ -81,9 +84,9 @@ class Brunnel2000(object):
             self.connect()
         nest.SetKernelStatus({'print_time':True})
         nest.Simulate(simtime)
-        events=nest.GetStatus(spikes,'n_events')
-        rate_ex=events[0]/simtime*1000.0/N_rec
-        rate_in=events[1]/simtime*1000.0/N_rec
+        events=nest.GetStatus(self.spikes,'n_events')
+        rate_ex=events[0]/simtime*1000.0/self.N_Rec
+        rate_in=events[1]/simtime*1000.0/self.N_Rec
         print 'Excite Rate: %.2f 1/s' % rate_ex
         print 'Inhib Rate: %.2f 1/s' % rate_in
 
