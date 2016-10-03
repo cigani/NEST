@@ -1,10 +1,15 @@
 import numpy as np
-import nest
+#import nest
 import seaborn
 import pylab
 import h5py
+import sys
 import os
-class Brunnel2000(object):
+
+sys.path.append('/Users/michaeljaquier/Documents/gewaltig/nest-/lib/\
+                python2.7/site-packages') # Needs to be imported manually?
+import nest
+class gif_model(object):
     """
     Implementation of Spars connected random network.
     """
@@ -45,10 +50,10 @@ class Brunnel2000(object):
         self.ji=-self.g*self.J_E
         nuex=self.eta*self.V_th/(self.J_E*self.ce*self.tau_m)
         prate=1000.0*nuex*self.ce
-        nest.SetDefaults('iaf_psc_delta',{'C_m': 1.0, 'tau_m': self.tau_m,
+        nest.SetDefaults('gif_cond_exp',{'C_m': 1.0, 'tau_m': self.tau_m,
                                           't_ref': 2.0, 'E_L': 0.0, 'V_th':
                                           self.V_th,'V_reset': 10.0})
-        self.nodes=nest.Create('iaf_psc_delta',nn)
+        self.nodes=nest.Create('gif_cond_exp',nn)
         self.nodesE=self.nodes[:self.N_E]
         self.nodesI=self.nodes[self.N_E:]
         self.noise=nest.Create('poisson_generator',1,{'rate': prate})
@@ -63,12 +68,12 @@ class Brunnel2000(object):
         if self.connected: return
         if not self.built:
             self.build()
-        nest.CopyModel('static_synapse_hom_w', 'excitatory',
+        nest.CopyModel('gif_exp_cond', 'excitatory',
                        {'weight': self.J_E, 'delay': self.delay})
         nest.Connect(self.nodesE, self.nodes, {'rule': 'fixed_indegree',
                                                'indegree':
                                      self.ce},'excitatory')
-        nest.CopyModel('static_synapse_hom_w', 'inhibitory',
+        nest.CopyModel('gif_exp_cond', 'inhibitory',
                        {'weight': self.ji, 'delay': self.delay})
         nest.Connect(self.nodesE, self.nodes, {'rule': 'fixed_indegree',
                                                'indegree':

@@ -38,13 +38,16 @@ C_E = N_E/10
 C_I = N_I/10
 J_E = 0.1
 J_I = -g*J_E
-nu_ex = eta*v_th/(J_E)
+nu_ex = eta*v_th/(J_'''
 p_rate = 1000.0*nu_ex*C_E
 nest.SetKernelStatus({'print_time': True})
 
 #Create Network
-nest.SetDefaults('gif_cond_exp', {'C_m': 1.0,
-                                  't_ref': 2.0,'E_L': 0.0})
+'''nest.SetDefaults('gif_cond_exp')
+                 {'C_m': 1.0, 'tau_minus': tau_m,
+                                  't_ref': 2.0,'E_L': 0.0,
+                                  'V_reset': 10.0})
+'''
 nodes = nest.Create('gif_cond_exp', N_N)
 nodes_E=nodes[:N_E]
 nodes_I=nodes[N_E:]
@@ -65,11 +68,10 @@ nest.Connect(nodes_E, nodes, {'rule': 'fixed_indegree', 'indegree': C_E},
              {'model': 'excitatory','delay': delay,'weight':
               {'distribution':'uniform','low': 0.5 *J_E,'high': 1.5*J_E}})
 
-#nest.CopyModel('static_synapse', 'inhibitory',
-#               {'weight':J_I, 'delay': delay})
-#nest.Connect(nodes_E, nodes, {'rule': 'fixed_indegree', 'indegree': C_I},
-#             {'model': 'inhibitory','delay': delay,'weight':
-#              {'distribution':'uniform','low': 0.5 *-J_I,'high': 1.5*-J_I}})
+nest.CopyModel('static_synapse', 'inhibitory',
+               {'weight':J_I, 'delay': delay})
+nest.Connect(nodes_E, nodes,
+             {'rule': 'fixed_indegree', 'indegree': C_I}, 'inhibitory')
 
 nest.Connect(noise,nodes, syn_spec='excitatory')
 
@@ -79,17 +81,17 @@ nest.Connect(nodes_E[:N_rec], spikes_E)
 nest.Connect(nodes_I[:N_rec], spikes_I)
 
 #Visualize
-#pylab.figure()
-#V_E=nest.GetStatus(nodes_E[:N_rec], 'V_m')
-#pylab.hist(V_E, bins=10)
-#pylab.figure()
-#ex_conns = nest.GetConnections(nodes_E[:N_rec],
-#                               synapse_model='excitatory')
-#w = nest.GetStatus(ex_conns, 'weight')
-#pylab.hist(w,bins=100)
+pylab.figure()
+V_E=nest.GetStatus(nodes_E[:N_rec], 'V_m')
+pylab.hist(V_E, bins=10)
+pylab.figure()
+ex_conns = nest.GetConnections(nodes_E[:N_rec],
+                               synapse_model='excitatory')
+w = nest.GetStatus(ex_conns, 'weight')
+pylab.hist(w,bins=100)
 
 #Sim
-simtime=90
+simtime=300
 nest.Simulate(simtime)
 events = nest.GetStatus(spikes,'n_events')
 rate_ex = events[0]/simtime*1000.0/N_rec
