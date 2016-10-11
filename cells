@@ -1,0 +1,28 @@
+import sys
+import numpy as np
+from pylab import *
+import h5py
+import nest
+
+# reset nest kernel
+nest.ResetKernel()
+nest.sr("M_WARNING setverbosity")
+nest.SetKernelStatus({"local_num_threads": 4})
+
+# load network
+cells = nest.Create("iaf_cond_exp",5, params=[{'I_e', 390.0}])
+
+# create spike detector
+rec = nest.Create('spike_detector', 1)
+nest.Connect(cells, rec)
+
+# simulate
+nest.Simulate(1000)
+
+# get spikes
+spikes = nest.GetStatus(rec, 'events')[0]
+
+
+print spikes
+
+# create raster plot
