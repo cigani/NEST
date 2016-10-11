@@ -1,5 +1,5 @@
 import numpy as np
-import h5py
+# import h5py
 import glob
 
 
@@ -19,7 +19,7 @@ def expLoad(dataPath=dataPath, cols=1,
     for i, k in enumerate(dataPath):
         expFile = np.loadtxt(k, usecols=[cols])
 
-        if iStart is not 0:
+        if iStart is not 0:  # TODO size.V != size.I
             expData[i] = np.array([expFile,
                                    np.append(
                                        np.zeros(iStart),
@@ -27,16 +27,16 @@ def expLoad(dataPath=dataPath, cols=1,
                                            expFile[iE:ExpStop]))*iE)])
         else:
             expData[i] = np.array([
-                expFile,
+                expFile[ExpStart:ExpStop],
                 np.ones(np.size(expFile[ExpStart:ExpStop]))*0.6])
     return expData, dataPath
 
 
-dataArray = expLoad()[0]
-data2 = expLoad()[1]
-print data2
+# dataArray = expLoad()[0]
+# data2 = expLoad()[1]
 
-V = [dataArray[n][0] for n, k in enumerate(dataPath)]
-I = [dataArray[n][1] for n, k in enumerate(dataPath)]
-V_units = 10**-3
-I_units = 10**-9
+
+# V = [dataArray[n][0] for n, k in enumerate(dataPath)]
+# I = [dataArray[n][1] for n, k in enumerate(dataPath)]
+# V_units = 10**-3
+# I_units = 10**-9
