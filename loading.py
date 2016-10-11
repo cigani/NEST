@@ -19,12 +19,12 @@ def expLoad(dataPath=dataPath, cols=1,
     for i, k in enumerate(dataPath):
         expFile = np.loadtxt(k, usecols=[cols])
 
-        if iStart is not 0:  # TODO size.V != size.I
-            expData[i] = np.array([expFile,
+        if iStart is not 0:  # TODO Needs to be tested
+            expData[i] = np.array([expFile[ExpStart:ExpStop],
                                    np.append(
                                        np.zeros(iStart),
                                        np.ones(np.size(
-                                           expFile[iE:ExpStop]))*iE)])
+                                           expFile[iStart:ExpStop]))*iE)])
         else:
             expData[i] = np.array([
                 expFile[ExpStart:ExpStop],
