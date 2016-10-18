@@ -1,5 +1,6 @@
 import numpy as np
-import loading as l
+import glob
+# import loading as l
 
 import sys
 PATH_FLAT = '/Users/mj/Documents/NEST/'
@@ -26,6 +27,10 @@ import Tools
 # Import Data. Create Arrays
 ####################################################
 
+EXPERIMENT_PATH = '/L5_TTPC1_cADpyr232_1/python_recordings/Data/*.dat'
+DATA_PATH = glob.glob(PATH_FLAT+EXPERIMENT_PATH)
+
+"""
 
 dataArray = l.expLoad()[0]
 dataPath = l.expLoad()[1]
@@ -35,6 +40,20 @@ V_units = 10**-3
 I_units = 10**-9
 
 assert np.size(I) == np.size(V) # These need to be equal
+
+"""
+
+V_units = 10**-3
+I_units = 10**-9
+
+V = []
+I = []
+
+for i, k in enumerate(DATA_PATH):
+    tempV = np.loadtxt(k, usecols=[0])
+    tempA = np.loadtxt(k, usecols=[1])
+    V.append(tempV)
+    I.append(tempA)
 
 
 ####################################################
@@ -47,7 +66,7 @@ myExp.addTrainingSetTrace(V[0], V_units,
                             I[0], I_units,
                             np.size(V[1])/10,
                             FILETYPE='Array')
-for n,k in enumerate(dataPath[1:]):
+for n,k in enumerate(DATA_PATH[1:]):
                      myExp.addTestSetTrace(V[n], V_units,
                                            I[n], I_units,
                                            np.size(V[n])/10,
@@ -125,7 +144,7 @@ myGIF.fit(myExp, DT_beforeSpike=2.0)
 
 myPredictionGIF_rect = myExp.predictSpikes(myGIF_rect, nb_rep=500)
 # myPredictionGIF_exp = myExp.predictSpikes(myGIF_exp, nb_rep=500)
-myPredictionGIF_rect.plotRaster(delta=1000)
+myPredictionGIF_rect.plotRaster(delta=100)
 
 print "Model Performance"
 print "GIF Rect: "

@@ -134,7 +134,8 @@ iGIF_NP_fit.gamma = copy.deepcopy(GIF_fit.gamma) # use the same basis function a
 
 # Perform the fit
 
-iGIF_NP_fit.fit(experiment, theta_inf_nbbins=theta_inf_nbbins, theta_tau_all=theta_tau_all, DT_beforeSpike=5.0)
+iGIF_NP_fit.fit(experiment, theta_inf_nbbins=theta_inf_nbbins,
+                theta_tau_all=theta_tau_all, DT_beforeSpike=5.0)
 
 
 # Plot optimal parameters
