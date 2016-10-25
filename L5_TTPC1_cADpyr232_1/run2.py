@@ -44,7 +44,7 @@ import sys
 def genSine(f0, dur, delt=0.6):
     t = numpy.arange(dur)
     I = numpy.zeros(dur)
-    I0 = 0.45
+    I0 = 0.4
     tau = 20 # Lower = Crazier
     delt0 = .05  # Higher = Crazier
     var = delt0*(1+delt*numpy.sin(2*numpy.pi*t*f0))

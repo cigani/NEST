@@ -1,0 +1,35 @@
+/*
+Useful for examining empirical probability density function.
+
+$1 data vector
+$2 distribution range minimum 
+$3 distribution range maximum
+$4 binwidth
+*/
+objref g
+objref hist, indx, yval
+
+proc genhist() { local total
+    hist = new Vector()
+    hist = $o1.histogram($2,$3,$4)
+    // convert count histogram to estimate of probability density function
+    total = hist.sum()
+    hist.div(total)
+    // plot it as a series of bars
+    // create an index vector with 0,0, 1,1, 2,2, 3,3, ...
+    indx = new Vector(2*hist.size())
+    indx.indgen(0.5)
+    indx.apply("int")
+    // use the index vector
+    yval = new Vector(1)
+    yval.index(hist, indx)
+    yval.rotate(-1)   // so different y's within each pair
+    yval.x[0] = 0
+    // scale and translate index vector to correspond to min..max
+    // indx.mul(binwidth).add(min)
+    indx.mul($4).add($2)
+    g = new Graph(0)
+    yval.plot(g, indx)
+    g.view(-0.11, 0, 0.22, 0.2, 656, 25, 300.48, 200.32)
+    g.exec_menu("View = plot")
+}

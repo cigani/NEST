@@ -1,0 +1,64 @@
+load_file("nrngui.hoc")
+
+MEAN = 0 // noise current mean and std dev
+STDEV = 0.1
+tstop = 1
+v_init = -70 // model cell has pas only
+
+///// model setup
+
+create soma
+access soma
+L = 10
+diam = 100/L/PI
+insert pas
+
+///// add noise by attaching an instance of InGauss to each affected segment
+
+// for each InGauss must create and associate an instance of Random,
+// each of which must generate a statistically independent series of values
+
+load_file("ranstream.hoc")
+random_stream_offset_ = 1000*40 // assumes dt = 0.025
+  // adj streams will be correlated by this offset
+  // assume longest simulation will be 1000 ms
+
+// create and seed the generators before specifying their distributions
+
+inoise_random_low_start_ = 1
+mcell_ran4_init(inoise_random_low_start_)
+
+objref rs, in
+rs = new RandomStream(0)
+rs.r.normal(0,1) // mean 0, variance 1
+rs.start()
+
+// finally create and attach the InUnis
+// and associate each with its random stream generator
+
+soma in = new InGauss(0.5)
+in.mean = MEAN // nA
+in.stdev = STDEV // nA
+in.del = 0 // ms
+in.dur = 1e9 // "forever"
+in.noiseFromRandom(rs.r)
+
+load_file("rig.ses")
+
+///// instrumentation:  determine and display empirical probablility density function
+
+objref ivec
+ivec = new Vector()
+ivec.record(&in.i)
+
+xopen("hist.hoc")
+
+proc myrun() {
+  run()
+  genhist(ivec, MEAN-3*STDEV, MEAN+3*STDEV, 6*STDEV/20)
+}
+
+myrun()
+
+print "Use RunControl to set simulation parameters (Tstop etc.)"
+print "then execute myrun() to see empirical probability density function."
