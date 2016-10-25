@@ -41,17 +41,21 @@ import numpy
 import sys
 
 
-def genSine(f0, dur, delt=0.5):
+def genSine(f0, dur, delt=0.6):
     t = numpy.arange(dur)
-    var = 1+delt*numpy.sin(2*numpy.pi*t*f0)
     I = numpy.zeros(dur)
-    I0 = 0.05
-    tau = 200
+    I0 = 0.45
+    tau = 20 # Lower = Crazier
+    delt0 = .05  # Higher = Crazier
+    var = delt0*(1+delt*numpy.sin(2*numpy.pi*t*f0))
     for n in numpy.arange(dur-1):
         I[n+1] = I[n] + ((I0-I[n])/tau)*neuron.h.dt + \
             numpy.sqrt((2*numpy.power(var[n], 2) * neuron.h.dt) / tau) * \
             numpy.random.normal()
+        # print(numpy.power(var[n],2))
         I[n] = I[n+1]
+        # print("Step: %s" %n)
+
     return I
 
 
@@ -142,38 +146,35 @@ def run_step(step_number, plot_traces=None):
     # print stimuli[0].amp
     # Overriding default 30s simulation,
     print('Setting simulation time to 3s for the step currents')
-    neuron.h.tstop = 300
+    neuron.h.tstop = 5000
 
     print('Disabling variable timestep integration')
     neuron.h.cvode_active(0)
 
 
-    fAmp = float(stimuli[0].amp)
-    iAmp = float(stimuli[1].amp)
-    tAmp = stimuli[1].amp*0.2+stimuli[0].amp
-    numpy.random.seed(777)
-    noise = numpy.random.standard_normal(neuron.h.tstop/neuron.h.dt+1)*fAmp
-    numpy.random.seed(666)
-    noisei = numpy.random.standard_normal(neuron.h.tstop/neuron.h.dt+1)*iAmp
-    noiseT = noisei+noise
-    VecStim = neuron.h.Vector(numpy.size(noise))
+    #fAmp = float(stimuli[0].amp)
+    #iAmp = float(stimuli[1].amp)
+    #tAmp = stimuli[1].amp*0.2+stimuli[0].amp
+    #numpy.random.seed(777)
+    #noise = numpy.random.standard_normal(neuron.h.tstop/neuron.h.dt+1)*fAmp
+    #numpy.random.seed(666)
+    #noisei = numpy.random.standard_normal(neuron.h.tstop/neuron.h.dt+1)*iAmp
+    #noiseT = noisei+noise
+
     # print numpy.size(noiseT)
     # print neuron.h.tstop/neuron.h.dt
     # print numpy.sum(noiseT)
     # VecTime = neuron.h.Vector( numpy.size(noise) )
-    sin = genSine(0.00002, (neuron.h.tstop/neuron.h.dt+1))
-    sinNoise = numpy.zeros(numpy.size(noise))
-    for k in xrange(numpy.size(noise)):
-        sinNoise[k] = (1+sin[k])*noiseT[k]
+    inputNoisy = genSine(0.00002, (neuron.h.tstop/neuron.h.dt+1))
 
-
-    for k in xrange(numpy.size(noise)):  # Hacky but stops seg errors
-        VecStim.set(k, sinNoise[k])
+    VecStim = neuron.h.Vector(numpy.size(inputNoisy))
+    for k in xrange(numpy.size(inputNoisy)):  # Hacky but stops seg errors
+        VecStim.set(k, inputNoisy[k])
         # print VecStim.get(k)
 
     VecStim.play(stimuli[0]._ref_amp, neuron.h.dt)
     print('Running for %f ms' % neuron.h.tstop)
-    #neuron.h.run()
+    neuron.h.run()
 
     time = numpy.array(recordings['time'])
     soma_voltage = numpy.array(recordings['soma(0.5)'])
