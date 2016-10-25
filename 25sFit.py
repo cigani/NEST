@@ -1,5 +1,6 @@
 import numpy as np
-import loading as l
+import glob
+# import loading as l
 
 import sys
 PATH_FLAT = '/Users/mj/Documents/NEST/'
@@ -26,6 +27,10 @@ import Tools
 # Import Data. Create Arrays
 ####################################################
 
+EXPERIMENT_PATH = '/L5_TTPC1_cADpyr232_1/python_recordings/Data/*.dat'
+DATA_PATH = glob.glob(PATH_FLAT+EXPERIMENT_PATH)
+
+"""
 
 dataArray = l.expLoad()[0]
 dataPath = l.expLoad()[1]
@@ -35,6 +40,20 @@ V_units = 10**-3
 I_units = 10**-9
 
 assert np.size(I) == np.size(V) # These need to be equal
+
+"""
+
+V_units = 10**-3
+I_units = 10**-9
+
+V = []
+I = []
+
+for i, k in enumerate(DATA_PATH):
+    tempV = np.loadtxt(k, usecols=[0])
+    tempA = np.loadtxt(k, usecols=[1])
+    V.append(tempV)
+    I.append(tempA)
 
 
 ####################################################
@@ -47,7 +66,7 @@ myExp.addTrainingSetTrace(V[0], V_units,
                             I[0], I_units,
                             np.size(V[1])/10,
                             FILETYPE='Array')
-for n,k in enumerate(dataPath[1:]):
+for n,k in enumerate(DATA_PATH[1:]):
                      myExp.addTestSetTrace(V[n], V_units,
                                            I[n], I_units,
                                            np.size(V[n])/10,
@@ -81,7 +100,33 @@ myExp.performAEC()
 ####################################################
 # GIF Fitting
 ####################################################
+myGIF = GIF(0.1)
 
+# Define parameters
+myGIF.Tref = 4.0
+
+myGIF.eta = Filter_Rect_LogSpaced()
+myGIF.eta.setMetaParameters(length=200.0, binsize_lb=0.1, binsize_ub=2.0, slope=30.0)
+
+
+myGIF.gamma = Filter_Rect_LogSpaced()
+myGIF.gamma.setMetaParameters(length=1.0, binsize_lb=0.1, binsize_ub=1.0, slope=90.0)
+# myAEC.K_opt.setMetaParameters(length=150.0, binsize_lb=myExp.dt, binsize_ub=2.0, slope=30.0, clamp_period=1.0)
+# Define the ROI of the training set to be used for the fit (in this example we will use only the first 100 s)
+#myExp.trainingset_traces[0].setROI([[0,100000.0]])
+
+# To visualize the training set and the ROI call again
+#myExp.plotTrainingSet()
+
+# Perform the fit
+myGIF.fit(myExp, DT_beforeSpike=5.0)
+
+# Plot the model parameters
+# myGIF.printParameters()
+# myGIF.plotParameters()
+
+
+'''
 myGIF_rect = GIF(0.1)
 myGIF_rect.Tref = 4.0
 myGIF_rect.eta.setMetaParameters(length=2000.0, binsize_lb=2.0,
@@ -90,7 +135,12 @@ myGIF_rect.gamma = Filter_Rect_LogSpaced()
 myGIF_rect.gamma.setMetaParameters(length=1000.0, binsize_lb=5.1,
                                    binsize_ub=1000.0, slope=5.0)
 myGIF_rect.fit(myExp, DT_beforeSpike=2.0)
+
 '''
+
+
+'''
+
 # myGIF_exp = GIF(0.1)
 # myGIF_exp.Tref = 4.0
 
@@ -123,18 +173,24 @@ myGIF.fit(myExp, DT_beforeSpike=2.0)
 # Compare Rect and Exp Models
 ####################################################
 
-myPredictionGIF_rect = myExp.predictSpikes(myGIF_rect, nb_rep=500)
+# myPredictionGIF_rect = myExp.predictSpikes(myGIF_rect, nb_rep=500)
 # myPredictionGIF_exp = myExp.predictSpikes(myGIF_exp, nb_rep=500)
-myPredictionGIF_rect.plotRaster(delta=1000)
+# myPredictionGIF_rect.plotRaster(delta=100)
 
 print "Model Performance"
 print "GIF Rect: "
 # myPredictionGIF_gene = myExp.predictSpikes(myGIF, nb_rep=500)
-myPredictionGIF_rect.computeMD_Kistler(40.0, 0.1)
+# myPredictionGIF_rect.computeMD_Kistler(40.0, 0.1)
 # print "GIF exp: "
 # myPredictionGIF_exp.computeMD_Kistler(4.0,  0.1)
 # myPredictionGIF_gene.computeMD_Kistler(4.0, 0.1)
+myPrediction = myExp.predictSpikes(myGIF, nb_rep=500)
 
+# Compute Md* with a temporal precision of +/- 4ms
+Md = myPrediction.computeMD_Kistler(4.0, 0.1)
+
+# Plot data vs model prediction
+myPrediction.plotRaster(delta=1000.0)
 ####################################################
 # Compare model Parameters
 ####################################################
