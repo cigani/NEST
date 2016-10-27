@@ -1,10 +1,13 @@
 import numpy as np
 import glob
 import h5py
+import seaborn
 
 import sys
 PATH_FLAT = '/Users/mj/Documents/NEST/'
 sys.path.append(PATH_FLAT+'/GIFFittingToolbox/src')
+sys.path.append(PATH_FLAT+'/GIFFittingToolbox/src/HBP')
+
 
 from Experiment import *
 from GIF import *
@@ -13,6 +16,7 @@ from AEC_Dummy import *
 from Filter_Rect_LinSpaced import *
 from Filter_Rect_LogSpaced import *
 from Filter_Exps import *
+from GIF_HT import *
 
 import Tools
 
@@ -25,56 +29,70 @@ import Tools
 # Import Data. Create Arrays
 ####################################################
 
-EXPERIMENT_PATH = 'L5_TTPC1_cADpyr232_1/python_recordings/Data/H5Data/*.hdf5'
-DATA_PATH = glob.glob(PATH_FLAT+EXPERIMENT_PATH)
+TRAIN_PATH = 'L5_TTPC1_cADpyr232_1/python_recordings/Data/H5Data/Train/*.hdf5'
+TEST_PATH = 'L5_TTPC1_cADpyr232_1/python_recordings/Data/H5Data/Test/*.hdf5'
+TRAIN_DATA_PATH = glob.glob(PATH_FLAT+TRAIN_PATH)
+TEST_DATA_PATH = glob.glob(PATH_FLAT+TEST_PATH)
 
 V_units = 10**-3
 I_units = 10**-9
 
-V = []
-I = []
+V_test = []
+V_train = []
+I_test = []
+I_train = []
+T_test = []
+T_train = []
 
-for n in DATA_PATH:
-    h5Data = h5py.File(n, 'r')
+for n in TRAIN_DATA_PATH:
+    h5DataTrain = h5py.File(n, 'r')
 
-for n, k in zip(h5Data.get('current'), h5Data.get('voltage')):
+for n in TEST_DATA_PATH:
+    h5DataTest = h5py.File(n, 'r')
+
+for n, k, i in zip(h5DataTest.get('current'), h5DataTest.get('voltage'),
+                   h5DataTest.get('time')):
     Itemp = np.array(n)
-    I.append(Itemp)
+    I_test.append(Itemp)
     Vtemp = np.array(k)
-    V.append(Vtemp)
+    V_test.append(Vtemp)
+    Ttemp = np.array(i)
+    T_test.append(Ttemp)
 
-assert(np.size(V) == np.size(I))
+assert(np.size(V_test) == np.size(I_test))
 
 
-'''
-for i, k in enumerate(DATA_PATH):
-    tempV = np.loadtxt(k, usecols=[0])
-    tempA = np.loadtxt(k, usecols=[1])
-    V.append(tempV)
-    I.append(tempA)
-'''
+for n, k, i in zip(h5DataTrain.get('current'), h5DataTrain.get('voltage'),
+                   h5DataTrain.get('time')):
+    Itemp = np.array(n)
+    I_train.append(Itemp)
+    Vtemp = np.array(k)
+    V_train.append(Vtemp)
+    Ttemp = np.array(i)
+    T_train.append(Ttemp)
+
+assert(np.size(V_train) == np.size(I_train))
+
 
 ####################################################
 # Load Training Set
 ####################################################
 
 
-myExp = Experiment('Experiment 1', 0.1)
+myExp = Experiment('Experiment 1', .1)
 
-for n, k in enumerate(V[:1]):
-    myExp.addTrainingSetTrace(V[n], V_units, I[n], I_units, np.size(V[n])/10,
-                              FILETYPE='Array')
-    myExp.trainingset_traces[0].setROI([[7798,200000.0]])
+for n, k in enumerate(V_test):
+    myExp.addTrainingSetTrace(V_train[n], V_units, I_train[n], I_units,
+                              np.size(T_train[n])/10,FILETYPE='Array')
+    myExp.trainingset_traces[0].setROI([[1000,120000.0]])
 
+for n, k in enumerate(V_train):
+    myExp.addTestSetTrace(V_test[n], V_units, I_test[n], I_units,
+                              np.size(T_test[n])/10, FILETYPE='Array')
+    myExp.testset_traces[n].setROI([[1000,40000]])
 
-for n, k in enumerate(V[1:]):
-    volt = V[n]
-    amp = I[n]
-    time = np.size(volt)/10
-    myExp.addTestSetTrace(volt, V_units, amp, I_units, time, FILETYPE='Array')
-
-# myExp.plotTrainingSet()
-# myExp.plotTestSet()
+#myExp.plotTrainingSet()
+#myExp.plotTestSet()
 
 ####################################################
 # AEC
@@ -85,102 +103,56 @@ myAEC = AEC_Dummy()
 myExp.setAEC(myAEC)
 myExp.performAEC()
 
-'''
-myExp.setAECTrace(V[0], V_units,
-                            I[0], I_units,
-                            np.size(V[0])/10,
-                            FILETYPE='Array')
-myAEC = AEC_Badel(myExp.dt)
-# Define metaparametres
-myAEC.K_opt.setMetaParameters(length=150.0, binsize_lb=myExp.dt,
-                              binsize_ub=2.0, slope=30.0, clamp_period=1.0)
-myAEC.p_expFitRange = [3.0,150.0]
-myAEC.p_nbRep = 15
 
-# Assign myAEC to myExp and compensate the voltage recordings
-myExp.setAEC(myAEC)
-myExp.performAEC()
-'''
+#################################################
+# METAPARAMETERS - MODEL
+#################################################
+
+
+DT_beforespike = 5.0
+T_ref = 3.0
+tau_gamma = [10.0, 50.0, 250.0]
+eta_tau_max = 1000.0
+
+
 ####################################################
 # GIF Fitting
 ####################################################
 
-
-'''
-# To visualize the training set and the ROI call again
-# myExp.plotTrainingSet()
-
-# Perform the fit
-myGIF.fit(myExp, DT_beforeSpike=5.0)
-
-# Plot the model parameters
-# myGIF.printParameters()
-# myGIF.plotParameters()
-
 myGIF_rect = GIF(0.1)
-myGIF_rect.Tref = 4.0
-myGIF_rect.eta.setMetaParameters(length=2000.0, binsize_lb=2.0,
-                                 binsize_ub=1000.0, slope=4.5)
-myGIF_rect.gamma = Filter_Rect_LogSpaced()
-myGIF_rect.gamma.setMetaParameters(length=1000.0, binsize_lb=5.1,
-                                   binsize_ub=1000.0, slope=5.0)
-myGIF_rect.fit(myExp, DT_beforeSpike=5.0)
+
+myGIF_rect.Tref = T_ref
+myGIF_rect.eta = Filter_Rect_LogSpaced()
+myGIF_rect.eta.setMetaParameters(length=500.0, binsize_lb=2.0, binsize_ub=100.0, slope=4.5)
+myGIF_rect.fitVoltageReset(myExp, myGIF_rect.Tref, do_plot=False)
+myGIF_rect.fitSubthresholdDynamics(myExp, DT_beforeSpike=DT_beforespike)
+
+# Fit sum of 3 exps on spike-triggered current (timescales slower than 500ms are excluded)
+myGIF_rect.eta.fitSumOfExponentials(3, [ 1.0, 0.5, 0.1], tau_gamma, ROI=None, dt=0.1)
+print "Optimal timescales: ", myGIF_rect.eta.tau0
+
+tau_opt = [t for t in myGIF_rect.eta.tau0 if t < eta_tau_max]
 
 
-myGIF_exp = GIF(0.1)
-myGIF_exp.Tref = 4.0
+#####################################################################################################################
+# FIT GIF
+#####################################################################################################################
 
-myGIF_exp.eta = Filter_Exps()
-myGIF_exp.eta.setFilter_Timescales([0.01, 0.1, 1.0,
-                                    5.0, 30.0, 100.0,
-                                    200.0, 500.0])
-
-# Perform Fit
-# myGIF_exp.fit(myExp, DT_beforeSpike=5.0)
-'''
-# Create a new object GIF
 myGIF = GIF(0.1)
 
-# Define parameters
-myGIF.Tref = 4.0
+myGIF.Tref = T_ref
+myGIF.eta = Filter_Exps()
+myGIF.eta.setFilter_Timescales(tau_opt)
+myGIF.gamma = Filter_Exps()
+myGIF.gamma.setFilter_Timescales(tau_gamma)
 
-myGIF.eta = Filter_Rect_LogSpaced()
-myGIF.eta.setMetaParameters(length=1000.0, binsize_lb=0.1,
-                            binsize_ub=1000.0, slope=4.5)
+myGIF.fit(myExp, DT_beforeSpike=DT_beforespike)
 
-myGIF.gamma = Filter_Rect_LogSpaced()
-myGIF.gamma.setMetaParameters(length=1000.0, binsize_lb=5.0,
-                              binsize_ub=1000.0, slope=5.0)
+# Use the myGIF model to predict the spiking data of the test data set in myExp
+myPrediction = myExp.predictSpikes(myGIF, nb_rep=500)
 
-# Perform the fit
-myGIF.fit(myExp, DT_beforeSpike=5.0)
-
-
-####################################################
-# Compare Rect and Exp Models
-####################################################
-
-# myPredictionGIF_rect = myExp.predictSpikes(myGIF_rect, nb_rep=500)
-# myPredictionGIF_exp = myExp.predictSpikes(myGIF_exp, nb_rep=500)
-# myPredictionGIF_rect.plotRaster(delta=1000)
-
-# print "Model Performance"
-print "GIF Rect: "
-# myPredictionGIF_gene = myExp.predictSpikes(myGIF, nb_rep=500)
-# myPredictionGIF_rect.computeMD_Kistler(100.0, 0.1)
-# print "GIF exp: "
-# myPredictionGIF_exp.computeMD_Kistler(100.0,  0.1)
-Prediction = myExp.predictSpikes(myGIF, nb_rep=500)
-Prediction.computeMD_Kistler(4.0, 0.1)
-m
 # Compute Md* with a temporal precision of +/- 4ms
-# Md = myPrediction.computeMD_Kistler(4.0, 0.1)
+#Md = myPrediction.computeMD_Kistler(4.0, 0.1)
 
 # Plot data vs model prediction
-# myPrediction.plotRaster(delta=1000.0)
-####################################################
-# Compare model Parameters
-####################################################
-
-
-# GIF.compareModels([myGIF_rect,  myGIF_exp], labels['GIF rect', 'GIF exp'])
+myPrediction.plotRaster(delta=1000.0)
