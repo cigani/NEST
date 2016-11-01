@@ -43,12 +43,17 @@ I_test = []
 I_train = []
 T_test = []
 T_train = []
+h5DataTest = []
+h5DataTrain = []
 
-for n in TRAIN_DATA_PATH:
-    h5DataTrain = h5py.File(n, 'r')
+for n, k in enumerate(TRAIN_DATA_PATH):
+    print n, k
+    h5DataTrainTemp = h5py.File(k, 'r')
+    h5DataTrain.append(h5DataTrainTemp)
 
-for n in TEST_DATA_PATH:
-    h5DataTest = h5py.File(n, 'r')
+for n, k in enumerate(TEST_DATA_PATH):
+    h5DataTestTemp = h5py.File(k, 'r')
+    h5DataTest.append(h5DataTestTemp)
 
 for n, k, i in zip(h5DataTest.get('current'), h5DataTest.get('voltage'),
                    h5DataTest.get('time')):
@@ -82,16 +87,18 @@ assert(np.size(V_train) == np.size(I_train))
 myExp = Experiment('Experiment 1', .1)
 
 for n, k in enumerate(V_test):
+    print "Trials"
+    print n
     myExp.addTrainingSetTrace(V_train[n], V_units, I_train[n], I_units,
                               np.size(T_train[n])/10,FILETYPE='Array')
-    myExp.trainingset_traces[0].setROI([[1000,120000.0]])
+    myExp.trainingset_traces[n].setROI([[1000,120000.0]])
 
 for n, k in enumerate(V_train):
     myExp.addTestSetTrace(V_test[n], V_units, I_test[n], I_units,
                               np.size(T_test[n])/10, FILETYPE='Array')
-    myExp.testset_traces[n].setROI([[1000,40000]])
+    myExp.testset_traces[n].setROI([[1000,20000]])
 
-#myExp.plotTrainingSet()
+myExp.plotTrainingSet()
 #myExp.plotTestSet()
 
 ####################################################
@@ -152,7 +159,7 @@ myGIF.fit(myExp, DT_beforeSpike=DT_beforespike)
 myPrediction = myExp.predictSpikes(myGIF, nb_rep=500)
 
 # Compute Md* with a temporal precision of +/- 4ms
-#Md = myPrediction.computeMD_Kistler(4.0, 0.1)
+Md = myPrediction.computeMD_Kistler(4.0, 0.1)
 
 # Plot data vs model prediction
 myPrediction.plotRaster(delta=1000.0)
