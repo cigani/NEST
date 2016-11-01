@@ -31,20 +31,24 @@ class Loader:
                                         self.TEST_PATH)
 
         try:
-            assert(self.TRAIN_DATA_PATH)
+            assert self.TRAIN_DATA_PATH
         except:
             raise Exception("Training data path is not set")
         try:
-            assert(self.TEST_DATA_PATH)
+            assert self.TEST_DATA_PATH
         except:
             raise Exception("Test data path is not set")
-        for n in self.TEST_DATA_PATH:
-            #print n
-            pattern = re.search('(\d+)\.hdf5$', n)
-            print pattern
-
-
-
+        for n, k in zip(self.TEST_DATA_PATH, self.TRAIN_DATA_PATH):
+            trainPattern = re.search('(\d+)\.hdf5$', k)
+            testPattern = re.search('(\d+)\.hdf5$', n)
+            try:
+                assert testPattern
+            except:
+                raise Exception("Test data is not formatted in hdf5")
+            try:
+                assert trainPattern
+            except:
+                raise Exception("Training data is not formatted in hdf5")
 
         # Initialize Variables
         self.V_test = []
@@ -60,7 +64,7 @@ class Loader:
 
     def dataload(self):
 
-        """ Returns two arrays: [0]: Test and [1]: Training composed of:
+        """ Returns two arrays: [0]: Train and [1]: Test composed of:
         [Voltage, Current, Time] nested arrays"""
 
         for n, k in enumerate(self.TRAIN_DATA_PATH):
@@ -82,7 +86,6 @@ class Loader:
                 Ttemp = np.array(i)
                 self.T_test.append(Ttemp)
 
-
         for h5File in self.h5datatrain:
             for n, k, i in zip(h5File.get('current'),
                                h5File.get('voltage'),
@@ -94,12 +97,12 @@ class Loader:
                 Ttemp = np.array(i)
                 self.T_train.append(Ttemp)
 
-        self.Train = [self.V_train, self.I_train, self.T_train]
-        self.Test = [self.V_test, self.I_test, self.T_test]
+        self.Train = np.transpose([self.V_train, self.I_train, self.T_train])
+        self.Test = np.transpose([self.V_test, self.I_test, self.T_test])
 
         self.testcoverage()
 
-        return self.Test, self.Train
+        return self.Train, self.Test
 
     def testcoverage(self):
 
@@ -112,4 +115,4 @@ class Loader:
         assert (np.size(self.Train) == np.size(
             self.V_train + self.T_train + self.I_train)
         )
-Loader().dataload()
+#Loader().dataload()

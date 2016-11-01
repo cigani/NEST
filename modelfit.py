@@ -1,13 +1,11 @@
 import sys
-
-import numpy as np
-import loading
-
-
 PATH_FLAT = '/Users/mj/Documents/NEST/'
 sys.path.append(PATH_FLAT+'/GIFFittingToolbox/src')
 sys.path.append(PATH_FLAT+'/GIFFittingToolbox/src/HBP')
 
+import loading
+
+import numpy as np
 
 from Experiment import *
 from GIF import *
@@ -43,21 +41,21 @@ class Fit():
 
         self.myExp = Experiment('Experiment 1', .1)
 
+        counter = 0
         for n in self.trainData:
-            print "Trials"
-            print n
             self.myExp.addTrainingSetTrace(n[0], self.V_units,
                                            n[1], self.I_units,
-                                           np.size(n[2])/10,
+                                           np.size(n[2]) / 10,
                                            FILETYPE='Array')
-            self.myExp.trainingset_traces[n].setROI([[1000, 120000.0]])
+            self.myExp.trainingset_traces[counter].setROI([[1000, 120000.0]])
+            counter += 1
 
         for n in self.testData:
-            self.myExp.addTestSetTrace([n][0], self.V_units,
-                                       [n][1], self.I_units,
-                                       np.size([n][2])/10,
+            print n[0]
+            self.myExp.addTestSetTrace(n[0][1000:180000], self.V_units,
+                                       n[1][1000:180000], self.I_units,
+                                       np.size(n[2][1000:180000]) / 10,
                                        FILETYPE='Array')
-            self.myExp.testset_traces[n].setROI([[1000, 20000]])
 
         self.fitaec(self, self.myExp)
 
@@ -67,7 +65,7 @@ class Fit():
         myExp.setAEC(myAEC)
         myExp.performAEC()
 
-        self.optimizetimescales(self, myExp)
+        self.optimizetimescales(myExp)
 
 
 
@@ -91,7 +89,7 @@ class Fit():
 
         self.tau_opt = [t for t in myGIF_rect.eta.tau0 if t < self.eta_tau_max]
 
-        self.fitmodel(self, myExp)
+        self.fitmodel(myExp)
 
     def fitmodel(self, myExp):
 
