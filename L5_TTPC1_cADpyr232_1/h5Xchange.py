@@ -23,8 +23,8 @@ for i, k in enumerate(DATA_PATH):
     I.append(tempA)
 
 timestr = time.strftime("%H%M%S")
-print np.size(T)
-if np.size(T) > 9e4:
+print(np.size(T) > 9e4)
+if np.size(T) > 9e5:
     fpath = H5_PATH+'Train/'+'dataFile{}.hdf5'.format(timestr)
 else:
     fpath = H5_PATH+'Test/'+'dataFile_{}.hdf5'.format(timestr)

@@ -1,28 +1,26 @@
-# pylint: disable=C0325, W0212, F0401, W0612, F0401
-
 import os
-import neuron
-import numpy as np
 import sys
 
+import neuron
+import numpy as np
 
-def genSine(f0, dur, delt=0.8):
+
+def generatecurrent(f0, dur, delt=0.8, i_e0=0.48):
     np.random.seed(777)
     t = np.arange(dur)
-    I = np.zeros(dur)
-    I0 = 0.48
-    tau = 20  # Lower = More Sinosoid
-    delt0 = .07  # Higher = Larger noise contribution
+    i_e = np.zeros(dur)
+    tau = 20  # Lower = More Sinusoid
+    delt0 = .37  # Higher = Larger noise contribution
     var = delt0*(1+delt*np.sin(2*np.pi*t*f0))
     for n in np.arange(dur-1):
-        I[n+1] = I[n] + ((I0-I[n])/tau)*neuron.h.dt + \
+        i_e[n+1] = i_e[n] + ((i_e0-i_e[n])/tau)*neuron.h.dt + \
             np.sqrt((2*np.power(var[n], 2) * neuron.h.dt) / tau) * \
             np.random.normal()
         # print(np.power(var[n],2))
-        I[n] = I[n+1]
+        i_e[n] = i_e[n+1]
         # print("Step: %s" %n)
 
-    return I
+    return i_e
 
 
 def create_cell(add_synapses=True):
@@ -61,11 +59,8 @@ def create_recordings(cell, stim):
     """Create the recordings"""
     print('Attaching recording electrodes')
 
-    recordings = {}
-
-    recordings['time'] = neuron.h.Vector()
-    recordings['soma(0.5)'] = neuron.h.Vector()
-    recordings['current'] = neuron.h.Vector()
+    recordings = {'time': neuron.h.Vector(), 'soma(0.5)': neuron.h.Vector(),
+                  'current': neuron.h.Vector()}
 
     recordings['current'].record(stim._ref_amp, 0.1)
     recordings['time'].record(neuron.h._ref_t, 0.1)
@@ -81,12 +76,12 @@ def run_step(plot_traces=None):
     stimuli = create_stimuli(cell)
     recordings = create_recordings(cell, stimuli[0])
     print('Setting simulation time to 3s for the step currents')
-    neuron.h.tstop = 30000
+    neuron.h.tstop = 150000
 
     print('Disabling variable timestep integration')
     neuron.h.cvode_active(0)
 
-    inputNoisy = genSine(0.00002, (neuron.h.tstop/neuron.h.dt+1))
+    inputNoisy = generatecurrent(0.00002, (neuron.h.tstop / neuron.h.dt + 1))
 
     VecStim = neuron.h.Vector(np.size(inputNoisy))
     for k in xrange(np.size(inputNoisy)):  # Hacky but stops seg errors
@@ -103,7 +98,6 @@ def run_step(plot_traces=None):
     recordings_dir = 'python_recordings'
 
     import pylab
-    import seaborn
     pylab.plot(soma_current)
     pylab.show()
 
@@ -119,7 +113,7 @@ def run_step(plot_traces=None):
                    soma_current))))
 
     print('Soma voltage saved to: %s'
-          % (soma_voltage_filename))
+          % soma_voltage_filename)
 
     if plot_traces:
         import pylab
@@ -127,9 +121,9 @@ def run_step(plot_traces=None):
         pylab.plot(recordings['time'], recordings['soma(0.5)'])
         pylab.xlabel('time (ms)')
         pylab.ylabel('Vm (mV)')
-    import h5Xchange
-    hfpy = h5Xchange
-    print hfpy
+    #import h5Xchange
+    #hfpy = h5Xchange
+    #print hfpy
 
 
 def init_simulation():
