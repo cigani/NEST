@@ -4,23 +4,7 @@ import sys
 import neuron
 import numpy as np
 
-
-def generatecurrent(f0, dur, delt=0.8, i_e0=0.48):
-    np.random.seed(777)
-    t = np.arange(dur)
-    i_e = np.zeros(dur)
-    tau = 20  # Lower = More Sinusoid
-    delt0 = .37  # Higher = Larger noise contribution
-    var = delt0*(1+delt*np.sin(2*np.pi*t*f0))
-    for n in np.arange(dur-1):
-        i_e[n+1] = i_e[n] + ((i_e0-i_e[n])/tau)*neuron.h.dt + \
-            np.sqrt((2*np.power(var[n], 2) * neuron.h.dt) / tau) * \
-            np.random.normal()
-        # print(np.power(var[n],2))
-        i_e[n] = i_e[n+1]
-        # print("Step: %s" %n)
-
-    return i_e
+import CurrentGenerator
 
 
 def create_cell(add_synapses=True):
@@ -76,12 +60,12 @@ def run_step(plot_traces=None):
     stimuli = create_stimuli(cell)
     recordings = create_recordings(cell, stimuli[0])
     print('Setting simulation time to 3s for the step currents')
-    neuron.h.tstop = 150000
+    neuron.h.tstop = 10000
 
     print('Disabling variable timestep integration')
     neuron.h.cvode_active(0)
 
-    inputNoisy = generatecurrent(0.00002, (neuron.h.tstop / neuron.h.dt + 1))
+    inputNoisy = generatecurrent(0.000002, (neuron.h.tstop / neuron.h.dt + 1))
 
     VecStim = neuron.h.Vector(np.size(inputNoisy))
     for k in xrange(np.size(inputNoisy)):  # Hacky but stops seg errors
@@ -90,7 +74,7 @@ def run_step(plot_traces=None):
 
     VecStim.play(stimuli[0]._ref_amp, neuron.h.dt)
     print('Running for %f ms' % neuron.h.tstop)
-    neuron.h.run()
+    #neuron.h.run()
 
     time = np.array(recordings['time'])
     soma_voltage = np.array(recordings['soma(0.5)'])
