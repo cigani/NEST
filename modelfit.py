@@ -52,9 +52,9 @@ class Fit():
 
         for n in self.testData:
             print n[0]
-            self.myExp.addTestSetTrace(n[0][1000:180000], self.V_units,
-                                       n[1][1000:180000], self.I_units,
-                                       np.size(n[2][1000:180000]) / 10,
+            self.myExp.addTestSetTrace(n[0][1000:140000], self.V_units,
+                                       n[1][1000:140000], self.I_units,
+                                       np.size(n[2][1000:140000]) / 10,
                                        FILETYPE='Array')
 
         self.fitaec(self, self.myExp)
