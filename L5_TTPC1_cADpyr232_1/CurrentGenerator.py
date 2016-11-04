@@ -41,7 +41,8 @@ class CurrentGenerator:
             self.i_e[n] = self.i_e[n+1]
         #self.plotcurrent()
         print("Sigma: {0}. DeltaSigma: {1}. i_e0: {2}".format(self.sigma,
-                                                     self.deltsigma, self.i_e0))
+                                                              self.deltsigma,
+                                                              self.i_e0))
         return self.i_e
 
     def subthresholdVar(self):
