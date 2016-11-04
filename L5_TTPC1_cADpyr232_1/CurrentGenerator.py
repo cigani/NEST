@@ -1,6 +1,12 @@
 import numpy as np
 
 
+def plotcurrent(val):
+    import pylab
+    pylab.plot(val)
+    pylab.show()
+
+
 class CurrentGenerator:
 
     def __init__(self, seed=777, time=3000, tau=100, i_e0=0.0, sigmaMax=0.8,
@@ -26,6 +32,7 @@ class CurrentGenerator:
         self.spks_flag = False
         self.threshold = threshold
         self.optsigma = optsigma
+        self.spks = []
 
     def generatecurrent(self):
         timespan = np.arange(self.time)
@@ -65,11 +72,6 @@ class CurrentGenerator:
             self.i_e[n] = self.i_e[n+1]
         return self.i_e
 
-    def plotcurrent(self):
-        import pylab
-        pylab.plot(self.variance)
-        pylab.show()
-
     def detectSpikes(self, ref=3.0):
 
         """
@@ -79,7 +81,6 @@ class CurrentGenerator:
         'absolute refractory period' ref, in ms.
         """
 
-        self.spks = []
         ref_ind = int(ref / self.dt)
         t = 0
         while (t < len(self.voltage) - 1):
@@ -92,6 +93,7 @@ class CurrentGenerator:
 
         self.spks = np.array(self.spks)
         self.spks_flag = True
+        return self.spks
 
     def getFarFromSpikes(self, DT_before=5.0, DT_after=5.0):
 

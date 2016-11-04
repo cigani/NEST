@@ -24,11 +24,12 @@ class Simulator:
                 :param i_e0: Injected current without noise
         """
 
-        self.time = 3000
-        self.sigmamax = 0.8
-        self.sigmamin = 0.3
+        self.time = 3000.0
+        self.sigmamax = 1.05
+        self.sigmamin = 0.35
         self.sigmaopt = 0.0
         self.i_e0 = 0.0
+        self.dt = 0.1
 
         # Injection current
         self.playVector = []
@@ -45,6 +46,7 @@ class Simulator:
         self.sigmaoptPlot = []
         self.deltasigma = 0.05
         self.spks = []
+        self.hz = 0.0
 
         # Current generating class
         self.cg = CurrentGenerator.CurrentGenerator
@@ -81,11 +83,10 @@ class Simulator:
 
         return self.stimuli
 
-    def create_current(self, time=300):
+    def create_current(self):
         """
         Generate the noisy current needed for injection
         """
-        self.time = time
         cg = CurrentGenerator.CurrentGenerator(time=self.time, i_e0=self.i_e0,
                                                sigmaMax=self.sigmamax,
                                                sigmaMin=self.sigmamin)
@@ -141,23 +142,32 @@ class Simulator:
     def brute_optimize_ie(self):
         n = 1
         self.i_e0 = 0.5
-        while self.spks < 10 or not self.spks:
+        self.time = 5000.0
+        while self.hz < 10:
             self.optmize_ie()
             self.spks = self.cg(voltage=self.rvoltage).detectSpikes()
-            print("Spikes: {0}, Current: {1}, Voltage: {2}, RCurrent {3}, "
-                  "Max Voltage: {4}".format(self.spks,
-                                            self.i_e0,
-                                            self.rvoltage,
-                                            self.rcurrent,
-                                            np.max(self.rvoltage)))
-            if self.spks < 9:
+            if self.spks.size:
+                self.hz = len(self.spks) / (self.time / 1000.0)
+            else:
+                self.hz = 0.0
+            self.dataprint("Spikes: {0}, Hz: {5}, Current: {1}, Voltage: {2}, "
+                           "RCurrent {3}, Max Voltage: {4}".format(
+                self.spks,
+                self.i_e0,
+                self.rvoltage,
+                self.rcurrent,
+                np.max(self.rvoltage),
+                self.hz))
+
+            if self.hz <= 10:
                 self.i_e0 += 0.4
-            elif self.spks > 13:
+            elif self.hz > 13:
                 self.i_e0 -= 0.1
+        CurrentGenerator.plotcurrent(self.current)
 
     def optmize_ie(self):
-        time = 5000
-        self.run_step(time)
+        self.time = 5000
+        self.run_step(self.time)
 
     def run_optimize_sigma(self):
         self.optimize_sigma()
@@ -168,12 +178,12 @@ class Simulator:
 
     def brute_optimize_sigma(self):
         n = 1
-        while (self.variance < 7 or not self.variance):
+        while self.variance < 7 or not self.variance:
+            self.dataprint("Optimizing Sigma: {0}".format(n))
             self.run_optimize_sigma()
             self.varPlot.append(self.variance)
             self.sigmaoptPlot.append(self.sigmaopt)
             self.sigmaopt += self.deltasigma
-            self.dataprint("Optimizing Sigma: {0}".format(n))
             if np.min(self.varPlot) > 3 and self.varPlot:
                 raise Exception("Need a lower Sigma starting point")
             n += 1
@@ -195,9 +205,10 @@ class Simulator:
         print("")
         print("Optimization Complete: Sigma Min: {0}. Sigma Max {1}.".format(
             self.sigmamin, self.sigmamax))
+        CurrentGenerator.plotcurrent(self.current)
 
     def optimize_sigma(self):
-        self.time = 300
+        self.time = 3000
         neuron.h.tstop = self.time
         self.i_e0 = 0.0
         cg = CurrentGenerator.CurrentGenerator(time=self.time,
