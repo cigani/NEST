@@ -67,8 +67,6 @@ class Fit():
 
         self.optimizetimescales(myExp)
 
-
-
     def optimizetimescales(self, myExp):
         myExp.plotTrainingSet()
         myExp.plotTestSet()
