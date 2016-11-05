@@ -1,18 +1,62 @@
 import os
-
+import sys
 from bisect import bisect_left
 
 import neuron
 import numpy as np
-import sys
 
 import CurrentGenerator
+
+
+def dataprint(data):
+    """
+
+    :rtype: Prints one line to Terminal
+    """
+    sys.stdout.write("\r\x1b[K" + data)
+    sys.stdout.flush()
+
+
+def take_closest(my_list, my_number):
+    """
+    Assumes my_list is sorted. Returns closest value to my_number.
+
+    If two numbers are equally close, return the smallest number.
+    """
+    pos = bisect_left(my_list, my_number)
+    if pos == 0:
+        return my_list[0]
+    if pos == len(my_list):
+        return my_list[-1]
+    before = my_list[pos - 1]
+    after = my_list[pos]
+    print("Before: {0}. Before Pos-1: {1}".format(before, pos - 1))
+    print("After: {0}. After Pos: {1}".format(after, pos))
+    if after - my_number < my_number - before:
+        return pos
+    else:
+        return pos - 1
+
+
+def find_opt(input_list, val):
+    return min(range(len(input_list)), key=lambda i: abs(input_list[i] - val))
+
+
+def init_simulation():
+    """Initialise simulation environment"""
+
+    neuron.h.load_file("stdrun.hoc")
+    neuron.h.load_file("import3d.hoc")
+
+    print('Loading constants')
+    neuron.h.load_file('constants.hoc')
 
 
 class Simulator:
     def __init__(self):
 
         # Creation Variables
+        self.currentFlag = False
         self.recordings = []
         self.stimuli = []
         self.cell = []
@@ -27,7 +71,6 @@ class Simulator:
         self.time = 3000.0
         self.sigmamax = 1.05
         self.sigmamin = 0.35
-        self.sigmaopt = 0.0
         self.i_e0 = 0.0
         self.dt = 0.1
 
@@ -41,10 +84,11 @@ class Simulator:
         self.rcurrent = []
 
         # Optimization
+        self.sigmaopt = 0.0
         self.variance = []
         self.varPlot = []
         self.sigmaoptPlot = []
-        self.deltasigma = 0.05
+        self.deltasigma = 0.01
         self.spks = []
         self.hz = 0.0
 
@@ -90,7 +134,7 @@ class Simulator:
         cg = CurrentGenerator.CurrentGenerator(time=self.time, i_e0=self.i_e0,
                                                sigmaMax=self.sigmamax,
                                                sigmaMin=self.sigmamin)
-        self.current = cg.generatecurrent()
+        self.current = cg.generate_current()
         self.playVector = neuron.h.Vector(np.size(self.current))
 
         for k in xrange(np.size(self.current)):
@@ -133,7 +177,6 @@ class Simulator:
         neuron.h.tstop = self.time
         self.create_current()
         self.playVector.play(self.stimuli._ref_amp, neuron.h.dt)
-        print("playVector Sum: {0}".format(np.sum(np.array(self.playVector))))
         print('Running for %f ms' % neuron.h.tstop)
         neuron.h.run()
         self.rvoltage = np.array(self.recordings['soma(0.5)'])
@@ -141,32 +184,27 @@ class Simulator:
 
     def brute_optimize_ie(self):
         n = 1
-        self.i_e0 = 0.5
-        self.time = 5000.0
+        self.time = 3000.0
         while self.hz < 10:
             self.optmize_ie()
-            self.spks = self.cg(voltage=self.rvoltage).detectSpikes()
+            self.spks = self.cg(voltage=self.rvoltage).detect_spikes()
             if self.spks.size:
                 self.hz = len(self.spks) / (self.time / 1000.0)
             else:
                 self.hz = 0.0
-            self.dataprint("Spikes: {0}, Hz: {5}, Current: {1}, Voltage: {2}, "
-                           "RCurrent {3}, Max Voltage: {4}".format(
-                self.spks,
-                self.i_e0,
-                self.rvoltage,
-                self.rcurrent,
-                np.max(self.rvoltage),
-                self.hz))
-
+            dataprint("i_e0: {0}, Hz: {1}"
+                      .format(self.i_e0,
+                              self.hz))
             if self.hz <= 10:
-                self.i_e0 += 0.4
+                self.i_e0 += 0.1
             elif self.hz > 13:
                 self.i_e0 -= 0.1
+            assert (
+                np.size(self.rvoltage == np.size(np.array(self.playVector))))
         CurrentGenerator.plotcurrent(self.current)
 
     def optmize_ie(self):
-        self.time = 5000
+        self.time = 10000
         self.run_step(self.time)
 
     def run_optimize_sigma(self):
@@ -174,22 +212,27 @@ class Simulator:
         self.playVector.play(self.stimuli._ref_amp, neuron.h.dt)
         neuron.h.run()
         self.rvoltage = np.array(self.recordings['soma(0.5)'])
-        self.variance = self.cg(voltage=self.rvoltage).subthresholdVar()
+        self.variance = self.cg(voltage=self.rvoltage).sub_threshold_var()
 
     def brute_optimize_sigma(self):
         n = 1
         while self.variance < 7 or not self.variance:
-            self.dataprint("Optimizing Sigma: {0}".format(n))
             self.run_optimize_sigma()
+
+            dataprint("Optimizing Sigma: {0}. "
+                      "Current Sigma: {1}. Current Var: {2}."
+                      .format(n,
+                              self.sigmaopt,
+                              self.variance))
             self.varPlot.append(self.variance)
             self.sigmaoptPlot.append(self.sigmaopt)
             self.sigmaopt += self.deltasigma
-            if np.min(self.varPlot) > 3 and self.varPlot:
-                raise Exception("Need a lower Sigma starting point")
             n += 1
+            assert (
+                np.size(self.rvoltage == np.size(np.array(self.playVector))))
 
-        sminIndex = self.findOpt(self.varPlot, 3)
-        smaxIndex = self.findOpt(self.varPlot, 7)
+        sminIndex = find_opt(self.varPlot, 3)
+        smaxIndex = find_opt(self.varPlot, 7)
         self.sigmamin = self.sigmaoptPlot[sminIndex]
         self.sigmamax = self.sigmaoptPlot[smaxIndex]
 
@@ -205,71 +248,39 @@ class Simulator:
         print("")
         print("Optimization Complete: Sigma Min: {0}. Sigma Max {1}.".format(
             self.sigmamin, self.sigmamax))
+
         CurrentGenerator.plotcurrent(self.current)
 
     def optimize_sigma(self):
-        self.time = 3000
+        self.time = 5000
         neuron.h.tstop = self.time
         self.i_e0 = 0.0
         cg = CurrentGenerator.CurrentGenerator(time=self.time,
                                                i_e0=self.i_e0,
                                                optsigma=self.sigmaopt)
-        self.current = cg.optgeneratecurrent()
+        self.current = cg.opt_generate_current()
         self.playVector = neuron.h.Vector(np.size(self.current))
 
         for k in xrange(np.size(self.current)):
             self.playVector.set(k, self.current[k])
         return self.playVector
 
-    def plottrace(self):
+    def plot_trace(self, val):
         plot_traces = True
         if plot_traces:
             import pylab
-            self.rvoltage = np.array(self.recordings['soma(0.5)'])
             self.rtime = np.array(self.recordings['time'])
             pylab.figure()
-            pylab.plot(self.rtime, self.rvoltage)
+            pylab.plot(self.rtime, val)
             pylab.xlabel('time (ms)')
             pylab.ylabel('Vm (mV)')
             pylab.show()
-
-    def findOpt(self, list, val):
-        return min(range(len(list)), key=lambda i: abs(list[i] - val))
-
-    def takeClosest(self, myList, myNumber):
-        """
-        Assumes myList is sorted. Returns closest value to myNumber.
-
-        If two numbers are equally close, return the smallest number.
-        """
-        pos = bisect_left(myList, myNumber)
-        if pos == 0:
-            return myList[0]
-        if pos == len(myList):
-            return myList[-1]
-        before = myList[pos - 1]
-        after = myList[pos]
-        print("Before: {0}. Before Pos-1: {1}".format(before, pos - 1))
-        print("After: {0}. After Pos: {1}".format(after, pos))
-        if after - myNumber < myNumber - before:
-            return pos
-        else:
-            return pos - 1
-
-    def init_simulation(self):
-        """Initialise simulation environment"""
-
-        neuron.h.load_file("stdrun.hoc")
-        neuron.h.load_file("import3d.hoc")
-
-        print('Loading constants')
-        neuron.h.load_file('constants.hoc')
 
     def main(self, optimize=False):
 
         """Main"""
 
-        self.init_simulation()
+        init_simulation()
         self.cell = self.create_cell(add_synapses=False)
         self.stimuli = self.create_stimuli()
         self.recordings = self.create_recordings(self.cell)
@@ -278,13 +289,10 @@ class Simulator:
         if optimize:
             self.brute_optimize_sigma()
             self.brute_optimize_ie()
-            self.plottrace()
+            self.plot_trace(np.array(self.recordings['soma(0.5)']))
+            self.plot_trace(np.array(self.recordings['current']))
         else:
             self.run_step(1000)
-
-    def dataprint(self, data):
-        sys.stdout.write("\r\x1b[K" + data)
-        sys.stdout.flush()
 
 
 Simulator().main(optimize=True)

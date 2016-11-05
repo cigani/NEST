@@ -59,7 +59,7 @@ class Simulator:
         cg = CurrentGenerator.CurrentGenerator(time=self.time, i_e0=self.i_e0,
                                                sigmaMax=self.smax,
                                                sigmaMin=self.smin)
-        self.current = cg.generatecurrent()
+        self.current = cg.generate_current()
         self.playVector = neuron.h.Vector(np.size(self.current))
 
         for k in xrange(np.size(self.current)):
@@ -111,7 +111,7 @@ class Simulator:
         neuron.h.run()
         self.rvoltage = np.array(self.recordings['soma(0.5)'])
         self.variance = self.cg(subthresholdvoltage=self.rvoltage)\
-            .subthresholdVar()
+            .sub_threshold_var
 
     def brute_optimize(self):
         n = 1
@@ -147,7 +147,7 @@ class Simulator:
         cg = CurrentGenerator.CurrentGenerator(time=self.time, i_e0=self.i_e0,
                                                optsigma=self.sigmaopt,
                                                optsigma=self.sigmaopt)
-        self.current = cg.optgeneratecurrent()
+        self.current = cg.opt_generate_current()
         self.playVector = neuron.h.Vector(np.size(self.current))
 
         for k in xrange(np.size(self.current)):
