@@ -74,7 +74,7 @@ class CurrentGenerator:
                                                     2) * self.dt) / self.tau) \
                               * np.random.normal()
             self.i_e[n] = self.i_e[n + 1]
-        plotcurrent(self.i_e)
+        #plotcurrent(self.i_e)
 
         return self.i_e
 

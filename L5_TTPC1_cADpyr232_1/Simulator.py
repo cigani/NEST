@@ -52,6 +52,7 @@ def init_simulation():
     neuron.h.load_file('constants.hoc')
 
 
+# noinspection PyProtectedMember,PyProtectedMember,PyProtectedMember
 class Simulator:
     def __init__(self):
 
@@ -148,8 +149,9 @@ class Simulator:
         :return: Time, Voltage, Current
         :rtype:  Dictionary ['time', 'soma(0.5)', 'current']
         """
-        self.recordings = {'time': neuron.h.Vector(), 'soma(0.5)':
-            neuron.h.Vector(), 'current': neuron.h.Vector()}
+        self.recordings = {'time': neuron.h.Vector(),
+                           'soma(0.5)': neuron.h.Vector(),
+                           'current': neuron.h.Vector()}
         self.recordings['current'].record(self.stimuli._ref_amp, 0.1)
         self.recordings['time'].record(neuron.h._ref_t, 0.1)
         self.recordings['soma(0.5)'].record(cell.soma[0](0.5)._ref_v, 0.1)
@@ -200,8 +202,8 @@ class Simulator:
             elif self.hz > 13:
                 self.i_e0 -= 0.1
             assert (
-                np.size(self.rvoltage == np.size(np.array(self.playVector))))
-        CurrentGenerator.plotcurrent(self.current)
+                np.size(self.rvoltage) == np.size(np.array(self.playVector)))
+            # CurrentGenerator.plotcurrent(self.current)
 
     def optmize_ie(self):
         self.time = 10000
@@ -229,7 +231,7 @@ class Simulator:
             self.sigmaopt += self.deltasigma
             n += 1
             assert (
-                np.size(self.rvoltage == np.size(np.array(self.playVector))))
+                np.size(self.rvoltage) == np.size(np.array(self.playVector)))
 
         sminIndex = find_opt(self.varPlot, 3)
         smaxIndex = find_opt(self.varPlot, 7)
@@ -249,7 +251,7 @@ class Simulator:
         print("Optimization Complete: Sigma Min: {0}. Sigma Max {1}.".format(
             self.sigmamin, self.sigmamax))
 
-        CurrentGenerator.plotcurrent(self.current)
+        # CurrentGenerator.plotcurrent(self.current)
 
     def optimize_sigma(self):
         self.time = 5000
