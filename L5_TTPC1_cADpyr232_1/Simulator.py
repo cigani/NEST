@@ -73,7 +73,7 @@ class Simulator:
         self.sigmamax = 1.05
         self.sigmamin = 0.35
         self.i_e0 = 0.0
-        self.dt = 0.1
+        self.dt = 0.025
 
         # Injection current
         self.playVector = []
@@ -135,7 +135,7 @@ class Simulator:
         cg = CurrentGenerator.CurrentGenerator(time=self.time, i_e0=self.i_e0,
                                                sigmaMax=self.sigmamax,
                                                sigmaMin=self.sigmamin)
-        self.current = cg.generate_current()
+        self.current = [x for x in cg.generate_current()]
         self.playVector = neuron.h.Vector(np.size(self.current))
 
         for k in xrange(np.size(self.current)):
@@ -185,8 +185,6 @@ class Simulator:
         self.rcurrent = np.array(self.recordings['current'])
 
     def brute_optimize_ie(self):
-        n = 1
-        self.time = 3000.0
         while self.hz < 10:
             self.optmize_ie()
             self.spks = self.cg(voltage=self.rvoltage).detect_spikes()
@@ -210,11 +208,31 @@ class Simulator:
         self.run_step(self.time)
 
     def run_optimize_sigma(self):
-        self.optimize_sigma()
+        self.optimize_play_vector()
         self.playVector.play(self.stimuli._ref_amp, neuron.h.dt)
         neuron.h.run()
         self.rvoltage = np.array(self.recordings['soma(0.5)'])
-        self.variance = self.cg(voltage=self.rvoltage).sub_threshold_var()
+        self.variance = self.cg(voltage=self.rvoltage[
+            1000/0.1:]).sub_threshold_var()
+
+    def optimize_play_vector(self):
+        self.time = 6000
+        neuron.h.tstop = self.time
+        self.i_e0 = 0.0
+
+        # Be sure to set the flag here
+        cg = CurrentGenerator.CurrentGenerator(time=self.time,
+                                               optsigma=self.sigmaopt,
+                                               optimize_flag=True)
+
+        self.current = [x for x in cg.generate_current()]
+        assert(np.size(self.current) == self.time/self.dt)
+
+        self.playVector = neuron.h.Vector(np.size(self.current))
+
+        for k in xrange(np.size(self.current)):
+            self.playVector.set(k, self.current[k])
+        return self.playVector
 
     def brute_optimize_sigma(self):
         n = 1
@@ -222,30 +240,33 @@ class Simulator:
             self.run_optimize_sigma()
 
             dataprint("Optimizing Sigma: {0}. "
-                      "Current Sigma: {1}. Current Var: {2}."
+                      "Current Sigma: {1}. Current Var: {2}. Vector Sizes {"
+                      "Voltage ( {3} ), playVector ( {4} )."
                       .format(n,
                               self.sigmaopt,
-                              self.variance))
+                              self.variance,
+                              np.size(self.rvoltage),
+                              np.size(
+                                  np.array(self.playVector)) * self.dt / 0.1))
+
             self.varPlot.append(self.variance)
             self.sigmaoptPlot.append(self.sigmaopt)
             self.sigmaopt += self.deltasigma
             n += 1
-            assert (
-                np.size(self.rvoltage) == np.size(np.array(self.playVector)))
 
         sminIndex = find_opt(self.varPlot, 3)
         smaxIndex = find_opt(self.varPlot, 7)
         self.sigmamin = self.sigmaoptPlot[sminIndex]
         self.sigmamax = self.sigmaoptPlot[smaxIndex]
-
+        self.plot_trace(self.rvoltage)
         if self.varPlot[sminIndex] > 4:
-            raise Exception("Sigma Minimum is above acceptable range."
+            raise Exception("Sigma Minimum is above acceptable range. "
                             "Initiate fitting with smaller Sigma")
         elif self.varPlot[sminIndex] < 2:
-            raise Exception("Sigma Minimum is below acceptable range."
+            raise Exception("Sigma Minimum is below acceptable range. "
                             "Initiate fitting with smaller d_sigma")
         if 5 > self.varPlot[smaxIndex] > 9:
-            raise Exception("Sigma Maximum is out of bounds."
+            raise Exception("Sigma Maximum is out of bounds. "
                             "Initiate fitting with smaller d_sigma.")
         print("")
         print("Optimization Complete: Sigma Min: {0}. Sigma Max {1}.".format(
@@ -253,19 +274,6 @@ class Simulator:
 
         # CurrentGenerator.plotcurrent(self.current)
 
-    def optimize_sigma(self):
-        self.time = 5000
-        neuron.h.tstop = self.time
-        self.i_e0 = 0.0
-        cg = CurrentGenerator.CurrentGenerator(time=self.time,
-                                               i_e0=self.i_e0,
-                                               optsigma=self.sigmaopt)
-        self.current = cg.opt_generate_current()
-        self.playVector = neuron.h.Vector(np.size(self.current))
-
-        for k in xrange(np.size(self.current)):
-            self.playVector.set(k, self.current[k])
-        return self.playVector
 
     def plot_trace(self, val):
         plot_traces = True
@@ -290,9 +298,9 @@ class Simulator:
         neuron.h.cvode_active(0)
         if optimize:
             self.brute_optimize_sigma()
-            self.brute_optimize_ie()
+            #self.brute_optimize_ie()
             self.plot_trace(np.array(self.recordings['soma(0.5)']))
-            self.plot_trace(np.array(self.recordings['current']))
+            #self.plot_trace(np.array(self.recordings['current']))
         else:
             self.run_step(1000)
 
