@@ -68,37 +68,19 @@ class Loader:
         [Voltage, Current, Time] nested arrays"""
 
         for n, k in enumerate(self.TRAIN_DATA_PATH):
-            h5datatraintemp = h5py.File(k, 'r')
-            self.h5datatrain.append(h5datatraintemp)
+            with h5py.File(k, 'r') as f:
+                self.I_train.append(f['current'][()])
+                self.V_train.append(f['voltage'][()])
+                self.T_train.append(f['time'][()])
 
         for n, k in enumerate(self.TEST_DATA_PATH):
-            h5datatesttemp = h5py.File(k, 'r')
-            self.h5datatest.append(h5datatesttemp)
+            with h5py.File(k, 'r') as f:
+                self.I_test.append(f['current'][()])
+                self.V_test.append(f['voltage'][()])
+                self.T_test.append(f['time'][()])
 
-        for h5File in self.h5datatest:
-            for n, k, i in zip(h5File.get('current'),
-                               h5File.get('voltage'),
-                               h5File.get('time')):
-                Itemp = np.array(n)
-                self.I_test.append(Itemp)
-                Vtemp = np.array(k)
-                self.V_test.append(Vtemp)
-                Ttemp = np.array(i)
-                self.T_test.append(Ttemp)
-
-        for h5File in self.h5datatrain:
-            for n, k, i in zip(h5File.get('current'),
-                               h5File.get('voltage'),
-                               h5File.get('time')):
-                Itemp = np.array(n)
-                self.I_train.append(Itemp)
-                Vtemp = np.array(k)
-                self.V_train.append(Vtemp)
-                Ttemp = np.array(i)
-                self.T_train.append(Ttemp)
-
-        self.Train = np.transpose([self.V_train, self.I_train, self.T_train])
-        self.Test = np.transpose([self.V_test, self.I_test, self.T_test])
+        self.Train = [self.V_train, self.I_train, self.T_train]
+        self.Test = [self.V_test, self.I_test, self.T_test]
 
         self.testcoverage()
 
@@ -115,4 +97,4 @@ class Loader:
         assert (np.size(self.Train) == np.size(
             self.V_train + self.T_train + self.I_train)
         )
-#Loader().dataload()
+# Loader().dataload()

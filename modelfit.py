@@ -1,7 +1,8 @@
 import sys
+
 PATH_FLAT = '/Users/mj/Documents/NEST/'
-sys.path.append(PATH_FLAT+'/GIFFittingToolbox/src')
-sys.path.append(PATH_FLAT+'/GIFFittingToolbox/src/HBP')
+sys.path.append(PATH_FLAT + '/GIFFittingToolbox/src')
+sys.path.append(PATH_FLAT + '/GIFFittingToolbox/src/HBP')
 
 import loading
 
@@ -22,9 +23,8 @@ from GIF_HT import *
 
 class Fit():
     def __init__(self):
-
-        self.V_units = 10**-3
-        self.I_units = 10**-9
+        self.V_units = 10 ** -3
+        self.I_units = 10 ** -9
         self.trainData = []
         self.testData = []
         self.DT_beforespike = 5.0
@@ -34,33 +34,28 @@ class Fit():
         self.tau_opt = []
 
     def importdata(self):
-
         # Data[0] = Voltage, Data[1] = Current, Data[2] = Time
 
         self.trainData, self.testData = loading.Loader().dataload()
 
         self.myExp = Experiment('Experiment 1', .1)
 
-        counter = 0
-        for n in self.trainData:
-            self.myExp.addTrainingSetTrace(n[0], self.V_units,
-                                           n[1], self.I_units,
-                                           np.size(n[2]) / 10,
-                                           FILETYPE='Array')
-            self.myExp.trainingset_traces[counter].setROI([[1000, 1200000]])
-            counter += 1
+        self.myExp.addTrainingSetTrace(self.trainData[0], self.V_units,
+                                       self.trainData[1], self.I_units,
+                                       np.size(self.trainData[2]) / 10,
+                                       FILETYPE='Array')
+        # self.myExp.trainingset_traces[counter].setROI([[1000, 1200000]])
 
-        for n in self.testData:
-            print n[0]
-            self.myExp.addTestSetTrace(n[0][1000:140000], self.V_units,
-                                       n[1][1000:140000], self.I_units,
-                                       np.size(n[2][1000:140000]) / 10,
+        for voltage, current, time in zip(self.testData[0], self.testData[1],
+                                          self.testData[2]):
+            self.myExp.addTestSetTrace(voltage, self.V_units,
+                                       current, self.I_units,
+                                       np.size(time) / 10,
                                        FILETYPE='Array')
 
         self.fitaec(self, self.myExp)
 
     def fitaec(self, myExp):
-
         myAEC = AEC_Dummy()
         myExp.setAEC(myAEC)
         myExp.performAEC()
@@ -90,7 +85,6 @@ class Fit():
         self.fitmodel(myExp)
 
     def fitmodel(self, myExp):
-
         myGIF = GIF(0.1)
 
         myGIF.Tref = self.T_ref
@@ -109,5 +103,6 @@ class Fit():
 
         # Plot data vs model prediction
         myPrediction.plotRaster(delta=1000.0)
+
 
 Fit().importdata()
