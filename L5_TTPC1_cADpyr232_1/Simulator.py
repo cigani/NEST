@@ -111,6 +111,7 @@ class Simulator:
         self.deltasigma = 0.005
         self.spks = []
         self.hz = 0.0
+        self.RandomSeed = 777
 
         # Current generating class
         self.cg = CurrentGenerator.CurrentGenerator
@@ -153,7 +154,8 @@ class Simulator:
         """
         cg = CurrentGenerator.CurrentGenerator(time=self.time, i_e0=self.i_e0,
                                                sigmaMax=self.sigmamax,
-                                               sigmaMin=self.sigmamin)
+                                               sigmaMin=self.sigmamin,
+                                               seed=self.RandomSeed)
         self.current = [x for x in cg.generate_current()]
         self.playVector = neuron.h.Vector(np.size(self.current))
 
@@ -331,7 +333,9 @@ class Simulator:
             while n < 10:
                 self.run_step(10000)
                 n += 1
-            self.run_step(110000)
+                self.seed += n * 35
+                self.plot_trace(np.array(self.recordings['current']))
+            #self.run_step(110000)
 
 
 Simulator().main(optimize=False)
