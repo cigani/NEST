@@ -6,8 +6,6 @@ sys.path.append(PATH_FLAT + '/GIFFittingToolbox/src/HBP')
 
 import loading
 
-import numpy as np
-
 from Experiment import *
 from GIF import *
 from AEC_Badel import *
@@ -17,9 +15,8 @@ from Filter_Rect_LogSpaced import *
 from Filter_Exps import *
 from GIF_HT import *
 
+import seaborn
 
-# import seaborn
-# import matplotlib.pyplot as plt
 
 class Fit():
     def __init__(self):
@@ -39,21 +36,22 @@ class Fit():
         self.trainData, self.testData = loading.Loader().dataload()
 
         self.myExp = Experiment('Experiment 1', .1)
-
-        self.myExp.addTrainingSetTrace(self.trainData[0], self.V_units,
-                                       self.trainData[1], self.I_units,
-                                       np.size(self.trainData[2]) / 10,
-                                       FILETYPE='Array')
+        for voltage, current, time in zip(self.trainData[0], self.trainData[1],
+                                          self.trainData[2]):
+            self.myExp.addTrainingSetTrace(voltage, self.V_units,
+                                           current, self.I_units,
+                                           np.size(time) / 10,
+                                           FILETYPE='Array')
         # self.myExp.trainingset_traces[counter].setROI([[1000, 1200000]])
-
         for voltage, current, time in zip(self.testData[0], self.testData[1],
                                           self.testData[2]):
+            print np.sum(voltage)
             self.myExp.addTestSetTrace(voltage, self.V_units,
                                        current, self.I_units,
                                        np.size(time) / 10,
                                        FILETYPE='Array')
 
-        self.fitaec(self, self.myExp)
+        # self.fitaec(self.myExp)
 
     def fitaec(self, myExp):
         myAEC = AEC_Dummy()
@@ -63,7 +61,7 @@ class Fit():
         self.optimizetimescales(myExp)
 
     def optimizetimescales(self, myExp):
-        myExp.plotTrainingSet()
+        #myExp.plotTrainingSet()
         myExp.plotTestSet()
 
         myGIF_rect = GIF(0.1)

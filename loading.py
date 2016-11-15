@@ -69,15 +69,16 @@ class Loader:
 
         for n, k in enumerate(self.TRAIN_DATA_PATH):
             with h5py.File(k, 'r') as f:
-                self.I_train.append(f['current'][()])
-                self.V_train.append(f['voltage'][()])
-                self.T_train.append(f['time'][()])
+                np.transpose(self.I_train.append(f['current'][()]))
+                np.transpose(self.V_train.append(f['voltage'][()]))
+                np.transpose(self.T_train.append(f['time'][()]))
 
         for n, k in enumerate(self.TEST_DATA_PATH):
             with h5py.File(k, 'r') as f:
-                self.I_test.append(f['current'][()])
-                self.V_test.append(f['voltage'][()])
-                self.T_test.append(f['time'][()])
+                np.transpose(self.I_test.append(f['current'][()]))
+                np.transpose(self.V_test.append(f['voltage'][()]))
+                np.transpose(self.T_test.append(f['time'][()]))
+                print np.sum(f['voltage'][()])
 
         self.Train = [self.V_train, self.I_train, self.T_train]
         self.Test = [self.V_test, self.I_test, self.T_test]
