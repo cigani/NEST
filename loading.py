@@ -78,7 +78,6 @@ class Loader:
                 np.transpose(self.I_test.append(f['current'][()]))
                 np.transpose(self.V_test.append(f['voltage'][()]))
                 np.transpose(self.T_test.append(f['time'][()]))
-                print np.sum(f['voltage'][()])
 
         self.Train = [self.V_train, self.I_train, self.T_train]
         self.Test = [self.V_test, self.I_test, self.T_test]

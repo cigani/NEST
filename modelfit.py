@@ -5,6 +5,7 @@ sys.path.append(PATH_FLAT + '/GIFFittingToolbox/src')
 sys.path.append(PATH_FLAT + '/GIFFittingToolbox/src/HBP')
 
 import loading
+import numpy as np
 
 from Experiment import *
 from GIF import *
@@ -25,7 +26,7 @@ class Fit():
         self.trainData = []
         self.testData = []
         self.DT_beforespike = 5.0
-        self.T_ref = 3.0
+        self.T_ref = 4.0
         self.tau_gamma = [10.0, 50.0, 250.0]
         self.eta_tau_max = 1000.0
         self.tau_opt = []
@@ -38,20 +39,19 @@ class Fit():
         self.myExp = Experiment('Experiment 1', .1)
         for voltage, current, time in zip(self.trainData[0], self.trainData[1],
                                           self.trainData[2]):
-            self.myExp.addTrainingSetTrace(voltage, self.V_units,
-                                           current, self.I_units,
-                                           np.size(time) / 10,
+            self.myExp.addTrainingSetTrace(voltage[10000:], self.V_units,
+                                           current[10000:], self.I_units,
+                                           np.size(time[10000:]) / 10,
                                            FILETYPE='Array')
         # self.myExp.trainingset_traces[counter].setROI([[1000, 1200000]])
         for voltage, current, time in zip(self.testData[0], self.testData[1],
                                           self.testData[2]):
-            print np.sum(voltage)
-            self.myExp.addTestSetTrace(voltage, self.V_units,
-                                       current, self.I_units,
-                                       np.size(time) / 10,
+            self.myExp.addTestSetTrace(voltage[10000:], self.V_units,
+                                       current[10000:], self.I_units,
+                                       np.size(time[10000:]) / 10,
                                        FILETYPE='Array')
 
-        # self.fitaec(self.myExp)
+        self.fitaec(self.myExp)
 
     def fitaec(self, myExp):
         myAEC = AEC_Dummy()
@@ -61,7 +61,7 @@ class Fit():
         self.optimizetimescales(myExp)
 
     def optimizetimescales(self, myExp):
-        #myExp.plotTrainingSet()
+        myExp.plotTrainingSet()
         myExp.plotTestSet()
 
         myGIF_rect = GIF(0.1)
