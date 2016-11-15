@@ -67,7 +67,7 @@ class CurrentGenerator:
 
     def current_variance_opt(self):
         for _ in np.arange(self.time / self.dt):
-            yield self.optsigma * (1 + 0.5 * np.sin(2 * np.pi * _ *
+            yield self.optsigma * (1 +  1 * np.sin(2 * np.pi * _ *
                                                     self.frequency * self.dt *
                                                     10 ** -3))
 
@@ -94,7 +94,7 @@ class CurrentGenerator:
         self.spks_flag = True
         return self.spks
 
-    def get_far_from_spikes(self, d_t_before=8.0, d_t_after=8.0):
+    def get_far_from_spikes(self, d_t_before=5.0, d_t_after=5.0):
 
         """
         Return indices of the trace which are in ROI. Exclude all datapoints
