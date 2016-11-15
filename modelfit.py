@@ -47,7 +47,7 @@ class Fit():
                                            n[1], self.I_units,
                                            np.size(n[2]) / 10,
                                            FILETYPE='Array')
-            self.myExp.trainingset_traces[counter].setROI([[1000, 120000.0]])
+            self.myExp.trainingset_traces[counter].setROI([[1000, 1200000]])
             counter += 1
 
         for n in self.testData:
