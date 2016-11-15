@@ -1,0 +1,2 @@
+621  export PATH=$HOME/Documents/gewaltig/NEST/bin:$PATH
+  622  export PYTHONPATH=$HOME/Documents/gewaltig/NEST/lib/python2.7/site-packages
