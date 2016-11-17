@@ -31,6 +31,12 @@ class Fit():
         self.eta_tau_max = 1000.0
         self.tau_opt = []
 
+    @staticmethod
+    def chunks(l, n):
+        """Yield successive n-sized chunks from l."""
+        for i in xrange(0, len(l), n):
+            yield l[i:i + n]
+
     def importdata(self):
         # Data[0] = Voltage, Data[1] = Current, Data[2] = Time
 
@@ -43,13 +49,17 @@ class Fit():
                                            current[10000:], self.I_units,
                                            np.size(time[10000:]) / 10,
                                            FILETYPE='Array')
-        # self.myExp.trainingset_traces[counter].setROI([[1000, 1200000]])
+
         for voltage, current, time in zip(self.testData[0], self.testData[1],
                                           self.testData[2]):
-            self.myExp.addTestSetTrace(voltage[10000:], self.V_units,
-                                       current[10000:], self.I_units,
-                                       np.size(time[10000:]) / 10,
-                                       FILETYPE='Array')
+            for voltageChunk, currentChunk, timeChunk in zip(
+                    self.chunks(voltage, 100000),
+                    self.chunks(current, 100000),
+                    self.chunks(time, 100000)):
+                self.myExp.addTestSetTrace(voltageChunk, self.V_units,
+                                           currentChunk, self.I_units,
+                                           np.size(timeChunk) / 10,
+                                           FILETYPE='Array')
 
         self.fitaec(self.myExp)
 

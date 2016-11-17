@@ -38,6 +38,7 @@ class Loader:
             assert self.TEST_DATA_PATH
         except:
             raise Exception("Test data path is not set")
+
         for n, k in zip(self.TEST_DATA_PATH, self.TRAIN_DATA_PATH):
             trainPattern = re.search('(\d+)\.hdf5$', k)
             testPattern = re.search('(\d+)\.hdf5$', n)
