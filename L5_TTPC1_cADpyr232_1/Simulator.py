@@ -1,6 +1,7 @@
 import os
 import sys
-
+PATH_FLAT = '/Users/mj/Documents/NEST/'
+sys.path.append('/Applications/NEURON-7.4/')
 from bisect import bisect_left
 
 import neuron

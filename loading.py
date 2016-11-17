@@ -31,12 +31,3 @@ def expLoad(dataPath=dataPath, cols=1,
                 np.ones(np.size(expFile[ExpStart:ExpStop]))*0.6])
     return expData, dataPath
 
-
-# dataArray = expLoad()[0]
-# data2 = expLoad()[1]
-
-
-# V = [dataArray[n][0] for n, k in enumerate(dataPath)]
-# I = [dataArray[n][1] for n, k in enumerate(dataPath)]
-# V_units = 10**-3
-# I_units = 10**-9
