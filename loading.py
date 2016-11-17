@@ -96,6 +96,4 @@ class Loader:
         assert (np.size(self.Test) == np.size(
             self.V_test + self.I_test + self.T_test))
         assert (np.size(self.Train) == np.size(
-            self.V_train + self.T_train + self.I_train)
-        )
-# Loader().dataload()
+            self.V_train + self.T_train + self.I_train))

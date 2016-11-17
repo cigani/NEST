@@ -94,22 +94,15 @@ class Fit():
 
     def fitmodel(self, myExp):
         myGIF = GIF(0.1)
-
         myGIF.Tref = self.T_ref
         myGIF.eta = Filter_Exps()
         myGIF.eta.setFilter_Timescales(self.tau_opt)
         myGIF.gamma = Filter_Exps()
         myGIF.gamma.setFilter_Timescales(self.tau_gamma)
-
         myGIF.fit(myExp, DT_beforeSpike=self.DT_beforespike)
 
-        # Use the myGIF model to predict the spiking data of the test data set in myExp
         myPrediction = myExp.predictSpikes(myGIF, nb_rep=500)
-
-        # Compute Md* with a temporal precision of +/- 4ms
         Md = myPrediction.computeMD_Kistler(4.0, 0.1)
-
-        # Plot data vs model prediction
         myPrediction.plotRaster(delta=1000.0)
 
 
