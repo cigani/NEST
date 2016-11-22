@@ -71,8 +71,8 @@ class Fit():
         self.optimizetimescales(myExp)
 
     def optimizetimescales(self, myExp):
-        myExp.plotTrainingSet()
-        myExp.plotTestSet()
+        # myExp.plotTrainingSet()
+        # myExp.plotTestSet()
 
         myGIF_rect = GIF(0.1)
 
@@ -89,21 +89,27 @@ class Fit():
         print "Optimal timescales: ", myGIF_rect.eta.tau0
 
         self.tau_opt = [t for t in myGIF_rect.eta.tau0 if t < self.eta_tau_max]
-
+        print "eta: ", myGIF_rect.eta.getCoefficients()
         self.fitmodel(myExp)
 
     def fitmodel(self, myExp):
         myGIF = GIF(0.1)
         myGIF.Tref = self.T_ref
         myGIF.eta = Filter_Exps()
+        print("tau_opt", self.tau_opt)
+        print("tau_gamma", self.tau_gamma)
         myGIF.eta.setFilter_Timescales(self.tau_opt)
         myGIF.gamma = Filter_Exps()
         myGIF.gamma.setFilter_Timescales(self.tau_gamma)
         myGIF.fit(myExp, DT_beforeSpike=self.DT_beforespike)
-
-        myPrediction = myExp.predictSpikes(myGIF, nb_rep=500)
-        Md = myPrediction.computeMD_Kistler(4.0, 0.1)
-        myPrediction.plotRaster(delta=1000.0)
+        #
+        # myPrediction = myExp.predictSpikes(myGIF, nb_rep=500)
+        # Md = myPrediction.computeMD_Kistler(4.0, 0.1)
+        # myPrediction.plotRaster(delta=1000.0)
+        print(myGIF.eta.getCoefficients())
+        print(myGIF.gamma.getCoefficients())
+        print(self.tau_opt)
+        print(self.tau_gamma)
 
 
 Fit().importdata()
