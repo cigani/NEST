@@ -6,6 +6,7 @@ sys.path.append(PATH_FLAT + '/GIFFittingToolbox/src/HBP')
 
 import loading
 import numpy as np
+import cPickle as pickle
 
 from Experiment import *
 from GIF import *
@@ -30,6 +31,8 @@ class Fit():
         self.tau_gamma = [10.0, 50.0, 250.0]
         self.eta_tau_max = 1000.0
         self.tau_opt = []
+        self.eta = []
+        self.gamma = []
 
     @staticmethod
     def chunks(l, n):
@@ -43,22 +46,24 @@ class Fit():
         self.trainData, self.testData = loading.Loader().dataload()
 
         self.myExp = Experiment('Experiment 1', .1)
-        for voltage, current, time in zip(self.trainData[0], self.trainData[1],
-                                          self.trainData[2]):
+        for voltage, current, duration in zip(self.trainData[0],
+                                              self.trainData[1],
+                                              self.trainData[2]):
             self.myExp.addTrainingSetTrace(voltage[10000:], self.V_units,
                                            current[10000:], self.I_units,
-                                           np.size(time[10000:]) / 10,
+                                           np.size(duration[10000:]) / 10,
                                            FILETYPE='Array')
 
-        for voltage, current, time in zip(self.testData[0], self.testData[1],
-                                          self.testData[2]):
+        for voltage, current, duration in zip(self.testData[0],
+                                              self.testData[1],
+                                              self.testData[2]):
             for voltageChunk, currentChunk, timeChunk in zip(
-                    self.chunks(voltage, 100000),
-                    self.chunks(current, 100000),
-                    self.chunks(time, 100000)):
-                self.myExp.addTestSetTrace(voltageChunk, self.V_units,
-                                           currentChunk, self.I_units,
-                                           np.size(timeChunk) / 10,
+                    self.chunks(voltage, 110000),
+                    self.chunks(current, 110000),
+                    self.chunks(duration, 110000)):
+                self.myExp.addTestSetTrace(voltageChunk[10000:], self.V_units,
+                                           currentChunk[10000:], self.I_units,
+                                           np.size(timeChunk[10000:]) / 10,
                                            FILETYPE='Array')
 
         self.fitaec(self.myExp)
@@ -89,27 +94,45 @@ class Fit():
         print "Optimal timescales: ", myGIF_rect.eta.tau0
 
         self.tau_opt = [t for t in myGIF_rect.eta.tau0 if t < self.eta_tau_max]
-        print "eta: ", myGIF_rect.eta.getCoefficients()
+
         self.fitmodel(myExp)
 
     def fitmodel(self, myExp):
         myGIF = GIF(0.1)
         myGIF.Tref = self.T_ref
         myGIF.eta = Filter_Exps()
-        print("tau_opt", self.tau_opt)
-        print("tau_gamma", self.tau_gamma)
         myGIF.eta.setFilter_Timescales(self.tau_opt)
         myGIF.gamma = Filter_Exps()
         myGIF.gamma.setFilter_Timescales(self.tau_gamma)
         myGIF.fit(myExp, DT_beforeSpike=self.DT_beforespike)
-        #
-        # myPrediction = myExp.predictSpikes(myGIF, nb_rep=500)
-        # Md = myPrediction.computeMD_Kistler(4.0, 0.1)
-        # myPrediction.plotRaster(delta=1000.0)
-        print(myGIF.eta.getCoefficients())
-        print(myGIF.gamma.getCoefficients())
-        print(self.tau_opt)
-        print(self.tau_gamma)
+        myPrediction = myExp.predictSpikes(myGIF, nb_rep=500)
+        Md = myPrediction.computeMD_Kistler(4, 0.1)
+        myPrediction.plotRaster(delta=1000.0)
 
+        self.eta = myGIF.eta.getCoefficients()
+        self.gamma = myGIF.gamma.getCoefficients()
+
+        self.model_params(myGIF)
+
+    def model_params(self, gif):
+        q_stc = []
+        q_sfa = []
+        for eta_index, eta in enumerate(self.eta):
+            q_eta_temp = eta / (
+                1 - np.exp(-self.T_ref / self.tau_opt[eta_index]))
+            q_stc.append(q_eta_temp)
+
+        for gamma_index, gamma in enumerate(self.gamma):
+            q_gamma_temp = gamma / (
+                1 - np.exp(-self.T_ref / self.tau_gamma[gamma_index]))
+            q_sfa.append(q_gamma_temp)
+        dict = gif.returnParam()
+        dict.update({'q_stc': q_stc,
+                     'q_sfa': q_sfa,
+                     "tau_stc": self.tau_opt,
+                     "tau_sfa": self.tau_gamma,
+                     "tau_syn_ex": 10.0,
+                     "lambda_0": 1.0})
+        pickle.dump(dict, open("NestModel/param/save.p", "wb"))
 
 Fit().importdata()
