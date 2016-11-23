@@ -5,6 +5,7 @@
       <option name="ignoredErrors">
         <list>
           <option value="E402" />
+          <option value="E303" />
         </list>
       </option>
     </inspection_tool>
@@ -20,6 +21,7 @@
         <list>
           <option value="neuron" />
           <option value="list.*" />
+          <option value="nest.*" />
         </list>
       </option>
     </inspection_tool>

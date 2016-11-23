@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebResourcesPaths">
+    <contentEntries>
+      <entry url="file://$PROJECT_DIR$">
+        <entryData>
+          <resourceRoots>
+            <path value="file://$PROJECT_DIR$/GIFFittingToolbox" />
+            <path value="file://$PROJECT_DIR$/GIFFittingToolbox/src" />
+          </resourceRoots>
+        </entryData>
+      </entry>
+      <entry url="file://$USER_HOME$/nest">
+        <entryData>
+          <resourceRoots>
+            <path value="file://$USER_HOME$/nest/lib/python2.7/site-packages/nest" />
+            <path value="file://$USER_HOME$/nest/lib/python2.7/site-packages" />
+          </resourceRoots>
+        </entryData>
+      </entry>
+      <entry url="file:///usr/local/Cellar/nest">
+        <entryData>
+          <resourceRoots>
+            <path value="file:///usr/local/Cellar/nest" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/nest" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/lib" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/bin" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build/nest" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build/nestkernel" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/pynest/nest" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sli" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build/conngen" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build/lib" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build/libltdl" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build/libnestutil" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build/librandom" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build/models" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build/precise" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build/sli" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build/testsuite" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/build/topology" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/conngen" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/conngen/sli" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/lib/sli" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/libltdl" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/libltdl/libltdl" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/libltdl/config" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/libltdl/loaders" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/libltdl/m4" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/nest/sources/libnestutil" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/.brew" />
+            <path value="file:///usr/local/Cellar/nest/2.10.0_3/share/doc" />
+            <path value="file://$USER_HOME$/usr/local/nest/lib/python2.7/site-packages" />
+            <path value="file://$USER_HOME$/usr/local/nest/lib/python2.7/site-packages/nest" />
+          </resourceRoots>
+        </entryData>
+      </entry>
+    </contentEntries>
+  </component>
+</project>

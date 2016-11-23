@@ -331,8 +331,8 @@ class Simulator:
             self.plot_trace(np.array(self.recordings['current']))
         else:
             n = 0
-            while n < 1:
-                self.run_step(200000)
+            while n < 10:
+                self.run_step(11000)
                 n += 1
 
                 # self.plot_trace(np.array(self.recordings['current']))
