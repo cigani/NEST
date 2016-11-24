@@ -21,12 +21,12 @@ class NestModel:
         self.neurons = 10
         self.p_ex = 0.3
         self.w_ex = 30.0
-        self.threads = 2
-        self.poisson_neurons = 10  # size of Poisson group
+        self.threads = 1
+        self.poisson_neurons = 1  # size of Poisson group
         self.rate_noise = 10.0  # firing rate of Poisson neurons (Hz)
         self.w_noise = 20.0  # synaptic weights from Poisson to population
         self.dt = 0.1
-        self.simtime = 2000
+        self.simtime = 20000
 
         # Misc
         self.name = self.__class__.__name__
@@ -41,6 +41,7 @@ class NestModel:
     def set_model_params(self):
         self.neuron_params = pickle.load(open(
             "/Users/mj/Documents/NEST/gif_model/NestModel/param/save.p", "rb"))
+        print self.neuron_params
 
     def calibrate(self):
         """
@@ -105,6 +106,6 @@ class NestModel:
         nest.raster_plot.from_device(self.spike_det, hist=True)
         plt.title('Population dynamics')
         plt.show()
-
+        print(self.neuron_params)
 
 NestModel().run()

@@ -250,7 +250,7 @@ class Simulator:
 
         # Be sure to set the flag here
         cg = CurrentGenerator.CurrentGenerator(time=self.time,
-                                               optsigma=self.sigmaopt,
+                                               sigmaOpt=self.sigmaopt,
                                                optimize_flag=True)
 
         self.current = [x for x in cg.generate_current()]

@@ -76,8 +76,8 @@ class Fit():
         self.optimizetimescales(myExp)
 
     def optimizetimescales(self, myExp):
-        # myExp.plotTrainingSet()
-        # myExp.plotTestSet()
+        myExp.plotTrainingSet()
+        myExp.plotTestSet()
 
         myGIF_rect = GIF(0.1)
 
@@ -111,6 +111,8 @@ class Fit():
 
         self.eta = myGIF.eta.getCoefficients()
         self.gamma = myGIF.gamma.getCoefficients()
+        myGIF.plotParameters()
+        myGIF.save('myGIF.pck')
 
         self.model_params(myGIF)
 
