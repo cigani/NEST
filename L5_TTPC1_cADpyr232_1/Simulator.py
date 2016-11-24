@@ -1,5 +1,6 @@
 import os
 import sys
+
 PATH_FLAT = '/Users/mj/Documents/NEST/'
 sys.path.append('/Applications/NEURON-7.4/')
 from bisect import bisect_left
@@ -8,6 +9,8 @@ import neuron
 import numpy as np
 
 import CurrentGenerator
+
+import cPickle as pickle
 
 
 def data_records(dictionaryofvalues, path):
@@ -25,8 +28,9 @@ def data_records(dictionaryofvalues, path):
     for keys, values in dictionaryofvalues.iteritems():
         saved = data_file.create_dataset('{0}'.format(keys),
                                          data=np.array(values),
-                        compression='gzip')
+                                         compression='gzip')
     data_file.close()
+
 
 def data_print_static(data):
     """
@@ -90,9 +94,9 @@ class Simulator:
         """
 
         self.time = 3000.0
-        self.sigmamax = 10*0.04
-        self.sigmamin = 10*0.025
-        self.i_e0 = 0.65
+        self.sigmamax = 0.045
+        self.sigmamin = 0.03
+        self.i_e0 = 0.64
         self.dt = 0.025
 
         # Injection current
@@ -213,10 +217,10 @@ class Simulator:
             data_records(self.recordings, "Test")
 
     def brute_optimize_ie(self):
-        while self.hz < 10:
+        while self.hz < 9.5:
             self.optmize_ie()
             self.spks = self.cg(
-                voltage=self.rvoltage[1000/0.1:]).detect_spikes()
+                voltage=self.rvoltage[1000 / 0.1:]).detect_spikes()
             if self.spks.size:
                 self.hz = len(self.spks) / (self.time / 1000.0)
             else:
@@ -224,13 +228,15 @@ class Simulator:
             data_print_static("i_e0: {0}, Hz: {1}"
                               .format(self.i_e0,
                                       self.hz))
-            if self.hz <= 10:
+            if self.hz <= 9.5:
                 self.i_e0 += 0.1
-            elif self.hz > 13:
+            elif self.hz > 10.5:
                 self.i_e0 -= 0.1
-        data_records({"i_e0": self.i_e0}, "Para")
+        current_paras = {"i_e0": self.i_e0}
+        pickle.dump(current_paras, open(
+            "python_recordings/Data/H5Data/Para/current_paras.p", "wb"))
 
-            # CurrentGenerator.plotcurrent(self.current)
+        CurrentGenerator.plotcurrent(self.current)
 
     def optmize_ie(self):
         self.time = 15000
@@ -242,20 +248,20 @@ class Simulator:
         neuron.h.run()
         self.rvoltage = np.array(self.recordings['voltage'])
         self.variance = self.cg(voltage=self.rvoltage[
-            1000/0.1:]).sub_threshold_var()
+                                        1000 / 0.1:]).sub_threshold_var()
 
     def optimize_play_vector(self):
-        self.time = 11000
+        self.time = 10000
         neuron.h.tstop = self.time
         self.i_e0 = 0.0
 
         # Be sure to set the flag here
         cg = CurrentGenerator.CurrentGenerator(time=self.time,
-                                               optsigma=self.sigmaopt,
+                                               sigmaOpt=self.sigmaopt,
                                                optimize_flag=True)
 
         self.current = [x for x in cg.generate_current()]
-        assert(np.size(self.current) == self.time/self.dt)
+        assert (np.size(self.current) == self.time / self.dt)
 
         self.playVector = neuron.h.Vector(np.size(self.current))
 
@@ -281,7 +287,7 @@ class Simulator:
         smaxIndex = find_opt(self.varPlot, 7)
         self.sigmamin = self.sigmaoptPlot[sminIndex]
         self.sigmamax = self.sigmaoptPlot[smaxIndex]
-        self.plot_trace(self.rvoltage[1000/0.1:])
+        self.plot_trace(self.rvoltage[1000 / 0.1:])
         if self.varPlot[sminIndex] > 4:
             raise Exception("Sigma Minimum is above acceptable range. "
                             "Initiate fitting with smaller Sigma")
@@ -292,25 +298,26 @@ class Simulator:
             raise Exception("Sigma Maximum is out of bounds. "
                             "Initiate fitting with smaller d_sigma.")
 
-        # Multiply the found sigmas by 10 to increase variance a touch
+        # Multiply the found sigmas by CONSTANT to increase variance a touch
         print("")
         print("Optimization Complete: Sigma Min: {0}. Sigma Max {1}.".format(
-            self.sigmamin*10, self.sigmamax*10))
+            self.sigmamin, self.sigmamax))
 
-        sigmas = {"sigmamin": self.sigmamin*10,
-                  "sigmamax": self.sigmamax*10}
+        sigmas = {"sigmamin": self.sigmamin * 5,
+                  "sigmamax": self.sigmamax * 5}
 
-        data_records(sigmas, "Para")
+        pickle.dump(sigmas, open(
+            "python_recordings/Data/H5Data/Para/save.p", "wb"))
         # CurrentGenerator.plotcurrent(self.current)
 
     def plot_trace(self, val):
         plot_traces = True
         if plot_traces:
             import pylab
-            #self.rtime = np.array(self.recordings['time'])
+            # self.rtime = np.array(self.recordings['time'])
             pylab.figure()
             pylab.plot(val)
-           # pylab.xlabel('time (ms)')
+            # pylab.xlabel('time (ms)')
             pylab.ylabel('Vm (mV)')
             pylab.show()
 
@@ -325,21 +332,24 @@ class Simulator:
         neuron.h.tstop = self.time
         neuron.h.cvode_active(0)
         if optimize:
-            #self.brute_optimize_sigma()
+            # self.brute_optimize_sigma()
             self.brute_optimize_ie()
-            self.plot_trace(np.array(self.recordings['voltage']))
-            self.plot_trace(np.array(self.recordings['current']))
+            # self.plot_trace(np.array(self.recordings['voltage']))
+            # self.plot_trace(np.array(self.recordings['current']))
+
         else:
-            n = 0
-            while n < 10:
-                self.run_step(11000)
-                n += 1
+            self.run_step(130000)
+            # n = 0
+            # while n < 10:
+            #     self.RandomSeed = (n+1)*11
+            #     self.run_step(11000)
+            #     n += 1
 
                 # self.plot_trace(np.array(self.recordings['current']))
-            # self.RandomSeed = 666
-            # self.run_step(110000)
+                # self.RandomSeed = 666
+                # self.run_step(110000)
 
 
-Simulator().main(optimize=False)
+Simulator().main(optimize=True)
 
-#data_records("test", [0.1, 0.3])
+# data_records("test", [0.1, 0.3])

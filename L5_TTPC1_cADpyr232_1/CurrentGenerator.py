@@ -8,10 +8,9 @@ def plotcurrent(val):
 
 
 class CurrentGenerator:
-    def __init__(self, seed=777, time=5000, tau=100, i_e0=0.0, sigmaMax=0.8,
-                 sigmaMin=0.5, frequency=0.2, dt=0.025, voltage=[],
-                 threshold=0.0,
-                 optsigma=0.5, optimize_flag=False):
+    def __init__(self, seed=777, time=5000, tau=3.0, i_e0=0.0, sigmaMax=0.55,
+                 sigmaMin=0.35, frequency=0.2, dt=0.025, voltage=[],
+                 threshold=0.0, sigmaOpt=0.5, optimize_flag=False):
 
         self.seed = np.random.seed(seed)
         self.time = time
@@ -31,7 +30,7 @@ class CurrentGenerator:
         self.spks = []
         self.spks_flag = False
         self.threshold = threshold
-        self.optsigma = optsigma
+        self.optsigma = sigmaOpt
         self.spks = []
         self.optimize_flag = optimize_flag
 
@@ -44,12 +43,25 @@ class CurrentGenerator:
             self.sin_variance = \
                 [variance for variance in self.current_variance()]
 
+        ou_process = [ou for ou in self.ou_process()]
+
         for n, k in enumerate(np.arange(self.time / self.dt)):
+            """
+            sin_sigma = sigma*(1+delta_sigma*np.sin(2*np.pi*f*t*10**-3))
+            I = OU_process*sin_sigma + mu
+            """
+
             yield self.i_e
-            self.i_e = self.i_e + \
-                       ((self.i_e0 - self.i_e) / self.tau) * self.dt + \
-                       np.sqrt((2 * np.power(self.sin_variance[n], 2) *
-                                self.dt) / self.tau) * np.random.normal()
+            self.i_e = ou_process[n] * self.sin_variance[n] + self.i_e0
+
+    def ou_process(self):
+        self.i_e=0
+        for _ in np.arange(self.time/self.dt):
+            yield self.i_e
+            self.i_e= (self.i_e +
+                       (self.i_e0 - self.i_e) * (self.dt/self.tau) +
+                       self.sigma * np.sqrt(2.0 * self.dt/self.tau) *
+                       np.random.normal())
 
     def sub_threshold_var(self):
         selection = self.get_far_from_spikes()
@@ -59,17 +71,18 @@ class CurrentGenerator:
         return sv
 
     def current_variance(self):
-        for _ in np.arange(self.time / self.dt):
-            yield self.sigma * (1 + self.delta_sigma * np.sin(2 * np.pi * _
-                                                              * self.frequency
-                                                              * self.dt *
-                                                              10 ** -3))
+        for time in np.arange(self.time / self.dt):
+            yield (self.sigma * (1 + 0.5 * np.sin(2 * np.pi * time
+                                                  * self.frequency
+                                                  * self.dt
+                                                  * 10 ** -3)))
 
     def current_variance_opt(self):
-        for _ in np.arange(self.time / self.dt):
-            yield self.optsigma * (1 +  1 * np.sin(2 * np.pi * _ *
-                                                    self.frequency * self.dt *
-                                                    10 ** -3))
+        for time in np.arange(int(self.time / self.dt)):
+            yield (self.optsigma * (1 + 0.5 * np.sin(2 * np.pi * time
+                                                     * self.frequency
+                                                     * self.dt
+                                                     * 10 ** -3)))
 
     def detect_spikes(self, ref=3.0):
 
@@ -124,4 +137,7 @@ class CurrentGenerator:
         indices = np.where(LR_flag == 0)[0]
 
         return indices
-
+cg = CurrentGenerator(time=10000, optimize_flag=True)
+mv = [x for x in cg.generate_current()]
+print mv[1000:1010]
+plotcurrent(mv)

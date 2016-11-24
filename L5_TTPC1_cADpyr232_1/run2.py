@@ -145,7 +145,7 @@ class Simulator:
         neuron.h.tstop = self.time
         self.i_e0 = 0.0
         cg = CurrentGenerator.CurrentGenerator(time=self.time, i_e0=self.i_e0,
-                                               optsigma=self.sigmaopt,
+                                               sigmaOpt=self.sigmaopt,
                                                optsigma=self.sigmaopt)
         self.current = cg.opt_generate_current()
         self.playVector = neuron.h.Vector(np.size(self.current))
