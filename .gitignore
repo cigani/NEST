@@ -96,3 +96,30 @@ ENV/
 
 # Rope project settings
 .ropeproject
+/GIFFittingToolbox/
+.idea/NEST.iml
+.idea/codeStyleSettings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/workspace.xml
+1-s2.0-S0925231204004175-main.pdf
+1604.00087v1.pdf
+Would skip repository GIFFittingToolbox/
+L5_TTPC1_cADpyr232_1/python_recordings/
+current100.png
+gif_model/.gitignore
+gif_model/CurrentGenerator.py
+gif_model/LICENSE
+gif_model/NestGIFModel.py
+gif_model/NestModel/
+gif_model/Simulator.py
+gif_model/figures/
+gif_model/gif_model_backup/
+gif_model/modelfit.py
+gif_model/myGIF.pck
+gif_model/pathedit.txt
+journal.pcbi.1004275.pdf
+models_neuron/
+nest-build/
+Would skip repository nest-simulator/
+untitled
