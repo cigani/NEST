@@ -123,3 +123,12 @@ models_neuron/
 nest-build/
 Would skip repository nest-simulator/
 untitled
+NestModel/.idea/NestModel.iml
+NestModel/.idea/misc.xml
+NestModel/.idea/modules.xml
+NestModel/.idea/workspace.xml
+NestModel/NestModel/
+NestModel/param/
+figures/
+gif_model_backup/
+myGIF.pck
