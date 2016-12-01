@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import signal
 
 
 def plotcurrent(val):
@@ -8,15 +9,16 @@ def plotcurrent(val):
 
 
 class CurrentGenerator:
-    def __init__(self, seed=777, time=5000, tau=3.0, i_e0=0.0, sigmaMax=0.55,
-                 sigmaMin=0.35, frequency=0.2, dt=0.025, voltage=[],
-                 threshold=0.0, sigmaOpt=0.5, optimize_flag=False):
+    def __init__(self, seed=777, time=5000, tau=3.0, i_e0=0.5, sigmaMax=0.325,
+                 sigmaMin=0.215, frequency=0.2, dt=0.025, voltage=[],
+                 threshold=0.0, sigmaOpt=0.51, optimize_flag=False):
 
         self.seed = np.random.seed(seed)
         self.time = time
         self.tau = tau
         self.i_e0 = i_e0
         self.i_e = []
+        self.m_ie = []
         self.sigmaMax = sigmaMax
         self.sigmaMin = sigmaMin
         self.sigma = (self.sigmaMax + self.sigmaMin) / 2
@@ -45,6 +47,8 @@ class CurrentGenerator:
 
         ou_process = [ou for ou in self.ou_process()]
 
+        moving_current = [mc for mc in self.triangle()]
+
         for n, k in enumerate(np.arange(self.time / self.dt)):
             """
             sin_sigma = sigma*(1+delta_sigma*np.sin(2*np.pi*f*t*10**-3))
@@ -52,16 +56,24 @@ class CurrentGenerator:
             """
 
             yield self.i_e
-            self.i_e = ou_process[n] * self.sin_variance[n] + self.i_e0
+            self.i_e = ou_process[n] * self.sin_variance[n] + moving_current[n]
+
+    def triangle(self):
+        for _ in np.arange(self.time/self.dt):
+            yield self.i_e0*(1+np.sin(2 * np.pi * _
+                                      * self.frequency
+                                      * self.dt
+                                      * 10 ** -3
+                                      * 0.1
+                                      ))
 
     def ou_process(self):
-        self.i_e=0
         for _ in np.arange(self.time/self.dt):
             yield self.i_e
-            self.i_e= (self.i_e +
-                       (self.i_e0 - self.i_e) * (self.dt/self.tau) +
-                       self.sigma * np.sqrt(2.0 * self.dt/self.tau) *
-                       np.random.normal())
+            self.i_e = (self.i_e +
+                        (self.i_e0 - self.i_e) * (self.dt / self.tau) +
+                        0.5 * np.sqrt(2.0 * self.dt / self.tau) *
+                        np.random.normal())
 
     def sub_threshold_var(self):
         selection = self.get_far_from_spikes()
@@ -72,19 +84,20 @@ class CurrentGenerator:
 
     def current_variance(self):
         for time in np.arange(self.time / self.dt):
-            yield (self.sigma * (1 + 0.5 * np.sin(2 * np.pi * time
+            yield (self.sigma * (0.3 + self.delta_sigma * np.sin(2 * np.pi *
+                                                                time
                                                   * self.frequency
                                                   * self.dt
                                                   * 10 ** -3)))
 
     def current_variance_opt(self):
         for time in np.arange(int(self.time / self.dt)):
-            yield (self.optsigma * (1 + 0.5 * np.sin(2 * np.pi * time
+            yield (self.optsigma * (1.0 + 0.5 * np.sin(2 * np.pi * time
                                                      * self.frequency
                                                      * self.dt
                                                      * 10 ** -3)))
 
-    def detect_spikes(self, ref=3.0):
+    def detect_spikes(self, ref=7.0):
 
         """
         Detect action potentials by threshold crossing (parameter threshold,
@@ -137,7 +150,8 @@ class CurrentGenerator:
         indices = np.where(LR_flag == 0)[0]
 
         return indices
-cg = CurrentGenerator(time=10000, optimize_flag=True)
-mv = [x for x in cg.generate_current()]
-print mv[1000:1010]
-plotcurrent(mv)
+# cg = CurrentGenerator(time=100000, optimize_flag=False)
+# # mv = [x for x in cg.generate_current()]
+# # # print mv[1000:1010]
+# # # mv = cg.triangle()
+# # plotcurrent(mv)

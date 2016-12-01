@@ -94,9 +94,9 @@ class Simulator:
         """
 
         self.time = 3000.0
-        self.sigmamax = 0.045
-        self.sigmamin = 0.03
-        self.i_e0 = 0.64
+        self.sigmamax = 0.325
+        self.sigmamin = 0.215
+        self.i_e0 = 0.16
         self.dt = 0.025
 
         # Injection current
@@ -109,7 +109,8 @@ class Simulator:
         self.rcurrent = []
 
         # Optimization
-        self.sigmaopt = 0.0
+        self.optimize = False
+        self.sigmaopt = 0.15
         self.variance = []
         self.varPlot = []
         self.sigmaoptPlot = []
@@ -160,7 +161,9 @@ class Simulator:
         cg = CurrentGenerator.CurrentGenerator(time=self.time, i_e0=self.i_e0,
                                                sigmaMax=self.sigmamax,
                                                sigmaMin=self.sigmamin,
-                                               seed=self.RandomSeed)
+                                               sigmaOpt=self.sigmaopt,
+                                               seed=self.RandomSeed,
+                                               optimize_flag=False)
         self.current = [x for x in cg.generate_current()]
         self.playVector = neuron.h.Vector(np.size(self.current))
 
@@ -211,13 +214,14 @@ class Simulator:
         self.rcurrent = np.array(self.recordings['current'])
         # self.plot_trace(self.rvoltage)
         # self.plot_trace(self.rcurrent)
-        if self.time >= 50000:
-            data_records(self.recordings, "Train")
-        else:
-            data_records(self.recordings, "Test")
+        if not self.optimize:
+            if self.time >= 50000:
+                data_records(self.recordings, "Train")
+            else:
+                data_records(self.recordings, "Test")
 
     def brute_optimize_ie(self):
-        while self.hz < 9.5:
+        while self.hz < 3.5 or self.hz > 5.5:
             self.optmize_ie()
             self.spks = self.cg(
                 voltage=self.rvoltage[1000 / 0.1:]).detect_spikes()
@@ -228,10 +232,10 @@ class Simulator:
             data_print_static("i_e0: {0}, Hz: {1}"
                               .format(self.i_e0,
                                       self.hz))
-            if self.hz <= 9.5:
-                self.i_e0 += 0.1
-            elif self.hz > 10.5:
-                self.i_e0 -= 0.1
+            if self.hz <= 3.5:
+                self.i_e0 += 0.05
+            elif self.hz > 5.5:
+                self.i_e0 -= 0.05
         current_paras = {"i_e0": self.i_e0}
         pickle.dump(current_paras, open(
             "python_recordings/Data/H5Data/Para/current_paras.p", "wb"))
@@ -303,8 +307,8 @@ class Simulator:
         print("Optimization Complete: Sigma Min: {0}. Sigma Max {1}.".format(
             self.sigmamin, self.sigmamax))
 
-        sigmas = {"sigmamin": self.sigmamin * 5,
-                  "sigmamax": self.sigmamax * 5}
+        sigmas = {"sigmamin": self.sigmamin,
+                  "sigmamax": self.sigmamax}
 
         pickle.dump(sigmas, open(
             "python_recordings/Data/H5Data/Para/save.p", "wb"))
@@ -314,7 +318,7 @@ class Simulator:
         plot_traces = True
         if plot_traces:
             import pylab
-            # self.rtime = np.array(self.recordings['time'])
+            #self.rtime = np.array(self.recordings['time'])
             pylab.figure()
             pylab.plot(val)
             # pylab.xlabel('time (ms)')
@@ -324,7 +328,7 @@ class Simulator:
     def main(self, optimize=False):
 
         """Main"""
-
+        self.optimize = optimize
         init_simulation()
         self.cell = self.create_cell(add_synapses=False)
         self.stimuli = self.create_stimuli()
@@ -332,24 +336,25 @@ class Simulator:
         neuron.h.tstop = self.time
         neuron.h.cvode_active(0)
         if optimize:
-            # self.brute_optimize_sigma()
+            #self.brute_optimize_sigma()
             self.brute_optimize_ie()
-            # self.plot_trace(np.array(self.recordings['voltage']))
-            # self.plot_trace(np.array(self.recordings['current']))
+            self.plot_trace(np.array(self.recordings['voltage']))
+            self.plot_trace(np.array(self.recordings['current']))
 
         else:
             self.run_step(130000)
-            # n = 0
-            # while n < 10:
-            #     self.RandomSeed = (n+1)*11
-            #     self.run_step(11000)
-            #     n += 1
+            n = 0
+            while n < 5:
+                # self.RandomSeed = 666
+                # self.RandomSeed = (n+1)*11
+                self.run_step(21000)
+                n += 1
 
                 # self.plot_trace(np.array(self.recordings['current']))
                 # self.RandomSeed = 666
                 # self.run_step(110000)
 
 
-Simulator().main(optimize=True)
+Simulator().main(optimize=False)
 
 # data_records("test", [0.1, 0.3])
