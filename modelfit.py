@@ -49,21 +49,17 @@ class Fit():
         for voltage, current, duration in zip(self.trainData[0],
                                               self.trainData[1],
                                               self.trainData[2]):
-            self.myExp.addTrainingSetTrace(voltage[10000:], self.V_units,
-                                           current[10000:], self.I_units,
-                                           np.size(duration[10000:]) / 10,
+            self.myExp.addTrainingSetTrace(voltage, self.V_units,
+                                           current, self.I_units,
+                                           np.size(duration) / 10,
                                            FILETYPE='Array')
 
         for voltage, current, duration in zip(self.testData[0],
                                               self.testData[1],
                                               self.testData[2]):
-            for voltageChunk, currentChunk, timeChunk in zip(
-                    self.chunks(voltage, 110000),
-                    self.chunks(current, 110000),
-                    self.chunks(duration, 110000)):
-                self.myExp.addTestSetTrace(voltageChunk[10000:], self.V_units,
-                                           currentChunk[10000:], self.I_units,
-                                           np.size(timeChunk[10000:]) / 10,
+                self.myExp.addTestSetTrace(voltage, self.V_units,
+                                           current, self.I_units,
+                                           np.size(duration) / 10,
                                            FILETYPE='Array')
 
         self.fitaec(self.myExp)
@@ -76,8 +72,8 @@ class Fit():
         self.optimizetimescales(myExp)
 
     def optimizetimescales(self, myExp):
-        myExp.plotTrainingSet()
-        myExp.plotTestSet()
+        # myExp.plotTrainingSet()
+        # myExp.plotTestSet()
 
         myGIF_rect = GIF(0.1)
 

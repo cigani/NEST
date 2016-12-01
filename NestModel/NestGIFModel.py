@@ -18,13 +18,13 @@ class NestModel:
         self.neuron_params = {}
 
         # NEST Model Parameters
-        self.neurons = 10
+        self.neurons = 5
         self.p_ex = 0.3
         self.w_ex = 30.0
         self.threads = 1
-        self.poisson_neurons = 1  # size of Poisson group
-        self.rate_noise = 10.0  # firing rate of Poisson neurons (Hz)
-        self.w_noise = 20.0  # synaptic weights from Poisson to population
+        self.poisson_neurons = 190  # size of Poisson group
+        self.rate_noise = 5.0  # firing rate of Poisson neurons (Hz)
+        self.w_noise = .100  # synaptic weights from Poisson to population
         self.dt = 0.1
         self.simtime = 20000
 
