@@ -39,8 +39,10 @@ class NestModel:
         nest.SetKernelStatus({"resolution": self.dt})
 
     def set_model_params(self):
-        self.neuron_params = pickle.load(open(
-            "/Users/mj/Documents/NEST/gif_model/NestModel/param/save.p", "rb"))
+        param_dict= pickle.load(open(
+            "/Users/mj/Documents/NEST/gif_model/NestModel/param/NESTParas.p",
+            "rb"))
+        self.neuron_params = param_dict['model']
         print self.neuron_params
 
     def calibrate(self):

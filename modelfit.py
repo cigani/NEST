@@ -103,11 +103,11 @@ class Fit():
         myGIF.fit(myExp, DT_beforeSpike=self.DT_beforespike)
         myPrediction = myExp.predictSpikes(myGIF, nb_rep=500)
         Md = myPrediction.computeMD_Kistler(4, 0.1)
-        myPrediction.plotRaster(delta=1000.0)
+        # myPrediction.plotRaster(delta=1000.0)
 
         self.eta = myGIF.eta.getCoefficients()
         self.gamma = myGIF.gamma.getCoefficients()
-        myGIF.plotParameters()
+        # myGIF.plotParameters()
         myGIF.save('myGIF.pck')
 
         self.model_params(myGIF)
@@ -115,22 +115,21 @@ class Fit():
     def model_params(self, gif):
         q_stc = []
         q_sfa = []
-        for eta_index, eta in enumerate(self.eta):
+        res_dic = gif.getResultDictionary()
+        pickle.dump(res_dic, open("NestModel/param/GIFParas.p", "wb"))
+        for eta_index, eta in enumerate(res_dic['model']['q_stc']):
             q_eta_temp = eta / (
-                1 - np.exp(-self.T_ref / self.tau_opt[eta_index]))
+                1 - np.exp(-self.T_ref /
+                           res_dic['model']['tau_stc'][eta_index]))
             q_stc.append(q_eta_temp)
-
-        for gamma_index, gamma in enumerate(self.gamma):
+        for gamma_index, gamma in enumerate(res_dic['model']['q_sfa']):
             q_gamma_temp = gamma / (
-                1 - np.exp(-self.T_ref / self.tau_gamma[gamma_index]))
+                1 - np.exp(-self.T_ref /
+                           res_dic['model']['tau_sfa'][gamma_index]))
             q_sfa.append(q_gamma_temp)
-        dict = gif.returnParam()
-        dict.update({'q_stc': q_stc,
-                     'q_sfa': q_sfa,
-                     "tau_stc": self.tau_opt,
-                     "tau_sfa": self.tau_gamma,
-                     "tau_syn_ex": 10.0,
-                     "lambda_0": 1.0})
-        pickle.dump(dict, open("NestModel/param/save.p", "wb"))
+        res_dic['model']['q_stc'] = q_stc
+        res_dic['model']['q_sfa'] = q_sfa
 
+
+        pickle.dump(res_dic, open("NestModel/param/NESTParas.p", "wb"))
 Fit().importdata()
